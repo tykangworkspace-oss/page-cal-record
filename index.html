@@ -166,10 +166,20 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 #colList label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#334155;margin:0;padding:5px 2px;border-bottom:1px solid #f1f5f9}
 #colList input[type=checkbox]{width:auto;margin:0;flex:0 0 auto}
 #colList .lk{margin-left:auto;font-size:10px;color:#94a3b8;font-weight:700}
+.modal input[type=password]{width:100%;border:1px solid #dde4ec;border-radius:8px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff}
+.modal input[type=password]:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px #2563eb22}
+.ghrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.ghrow button{padding:7px 12px;font-size:12px}
+.ghmsg{margin-top:10px;font-size:12px;padding:9px 11px;border-radius:8px;display:none;line-height:1.6}
+.ghmsg.on{display:block}
+.ghmsg.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534}
+.ghmsg.ng{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
+.ghmsg.info{background:#f8fafc;border:1px solid #e2e8f0;color:#475569}
+.ghwarn{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 11px;margin-top:12px;line-height:1.6}
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
+<header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button onclick="ghDialog()" title="비공개 GitHub 저장소에 데이터를 저장하고 다른 PC에서 불러옵니다">GitHub 동기화</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
 <nav><button class="on" onclick="tab('dashboard',this)">Dashboard</button><button class="" onclick="tab('info',this)">Project Info</button><button class="" data-fixed="wbs" onclick="tab('wbs',this)">WBS</button><button class="" data-fixed="docs" onclick="tab('docs',this)">문서 List</button><button class="" data-fixed="issue" onclick="tab('issue',this)">Issue List</button><button class="" data-fixed="change" onclick="tab('change',this)">변경 이력</button><button class="" data-fixed="test" onclick="tab('test',this)">시험 계획/결과</button><button class="" data-fixed="release" onclick="tab('release',this)">Release Check</button><button id="addSheetBtn" class="addsheet" title="시트 추가" onclick="addSheet()">+</button></nav>
 <main><section id="dashboard" class="page on"><div class="actions"><h2>Dashboard</h2></div>
 <div class="cards"><div class="card"><div class="muted" id="cardLabel1">WBS 진행률</div><div class="metric" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div><div class="card"><div class="muted">완료 업무</div><div class="metric" id="done">0</div></div><div class="card"><div class="muted" id="cardLabel3">오픈 Issue</div><div class="metric" id="open">0</div></div><div class="card"><div class="muted">Release Check</div><div class="metric" id="rel">0%</div><div class="bar"><i id="relbar"></i></div></div></div><div class="box" style="margin-top:12px"><div class="gbar-actions"><h3 style="margin:0 8px 0 0">간트 차트</h3>
@@ -224,11 +234,7 @@ function importEmbedded(){
       +'\n[취소] 이 PC에 저장된 내용을 그대로 사용합니다');
   }
   try{
-    if(go){
-      Object.keys(E.stores).forEach(k=>localStorage.setItem(k,JSON.stringify(E.stores[k])));
-      if(Array.isArray(E.projects)&&E.projects.length)localStorage.setItem(REG_KEY,JSON.stringify(E.projects));
-      if(E.active)localStorage.setItem(ACTIVE_KEY,E.active);
-    }
+    if(go)writePayload(E);
     localStorage.setItem(EMBED_TS_KEY,E.ts);
   }catch(e){}
 }
@@ -1409,20 +1415,232 @@ async function saveAllProjects(){
 
   const b=buildExportHtml();
   const blob=new Blob([b.html],{type:'text/html;charset=utf-8'});
-  const r=await writeToBackupFolder(blob,HTML_EXPORT_NAME);
+  const lines=['브라우저 저장: 프로젝트 '+names.length+'개'];
 
-  if(r==='ok'){
-    markSaved('전체 저장',b.label);
-    alert('전체 저장을 마쳤습니다.\n\n파일: '+HTML_EXPORT_NAME
-      +'\n프로젝트 '+names.length+'개 포함 ('+names.join(' / ')+')'
-      +'\n\n같은 이름으로 덮어쓰므로 폴더에는 항상 최신 파일 하나만 남습니다.');
-    return;
+  let gh=null;
+  if(ghCfg()){
+    gh=await ghPush();
+    lines.push('GitHub: '+(gh.state==='ok'?'저장 완료'
+      :gh.state==='conflict'?'중단됨 (먼저 불러오기 필요)'
+      :('실패 — '+(gh.msg||''))));
   }
 
-  markSaved('전체 저장(브라우저)',b.label);
-  downloadBlob(blob,b.dated);
-  alert('전체 저장을 마쳤습니다.\n\n파일: '+b.dated
-    +'\n프로젝트 '+names.length+'개 포함\n\n'+folderFailMsg(r));
+  const r=await writeToBackupFolder(blob,HTML_EXPORT_NAME);
+  if(r==='ok'){
+    lines.push('폴더 HTML: '+HTML_EXPORT_NAME);
+    markSaved('전체 저장',b.label);
+  }else{
+    downloadBlob(blob,b.dated);
+    lines.push('폴더 HTML: 다운로드 폴더에 '+b.dated);
+    markSaved('전체 저장(브라우저)',b.label);
+  }
+  alert('전체 저장을 마쳤습니다.\n\n'+lines.join('\n')
+    +'\n\n포함 프로젝트: '+names.join(' / ')
+    +((r==='ok')?'':('\n\n'+folderFailMsg(r))));
+}
+
+/* ===== GitHub 동기화 ===== */
+const GH_CFG='pm_github_cfg',GH_SHA='pm_github_sha',GH_TS='pm_github_ts';
+
+function b64enc(str){
+  const bytes=new TextEncoder().encode(str);
+  let s='';const CH=0x8000;
+  for(let i=0;i<bytes.length;i+=CH)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+CH));
+  return btoa(s);
+}
+function b64dec(b){
+  const bin=atob(String(b||'').replace(/\s/g,''));
+  const arr=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
+  return new TextDecoder().decode(arr);
+}
+
+function ghCfg(){
+  try{
+    const o=JSON.parse(localStorage.getItem(GH_CFG));
+    if(o&&o.owner&&o.repo&&o.token)return o;
+  }catch(e){}
+  return null;
+}
+function ghHeaders(c){
+  return {'Authorization':'Bearer '+c.token,'Accept':'application/vnd.github+json',
+    'Content-Type':'application/json','X-GitHub-Api-Version':'2022-11-28'};
+}
+function ghPath(c){return (c.path||'project-data.json').replace(/^\/+/,'')}
+function ghApi(c){
+  return 'https://api.github.com/repos/'+encodeURIComponent(c.owner)+'/'+encodeURIComponent(c.repo)
+    +'/contents/'+ghPath(c).split('/').map(encodeURIComponent).join('/');
+}
+async function ghErr(r){
+  let m='';
+  try{const j=await r.json();m=j.message||''}catch(e){}
+  if(r.status===401)return '토큰이 올바르지 않거나 만료되었습니다. (401)';
+  if(r.status===403)return '권한이 없습니다. 토큰 권한(Contents: Read and write)을 확인하세요. (403)';
+  if(r.status===404)return '저장소나 경로를 찾을 수 없습니다. 소유자/저장소 이름과 토큰 접근 범위를 확인하세요. (404)';
+  if(r.status===409||r.status===422)return '저장소의 파일이 그 사이 바뀌었습니다. 먼저 불러오기를 해주세요. ('+r.status+')';
+  return (m||'요청 실패')+' ('+r.status+')';
+}
+
+async function ghGet(c){
+  const r=await fetch(ghApi(c)+'?ref='+encodeURIComponent(c.branch||'main'),{headers:ghHeaders(c),cache:'no-store'});
+  if(r.status===404)return null;
+  if(!r.ok)throw new Error(await ghErr(r));
+  return await r.json();
+}
+
+async function ghPut(c,text,sha,msg){
+  const body={message:msg,content:b64enc(text),branch:c.branch||'main'};
+  if(sha)body.sha=sha;
+  const r=await fetch(ghApi(c),{method:'PUT',headers:ghHeaders(c),body:JSON.stringify(body)});
+  if(!r.ok)throw new Error(await ghErr(r));
+  return await r.json();
+}
+
+async function ghPush(){
+  const c=ghCfg();
+  if(!c)return {state:'nocfg'};
+  const payload=buildPayload();
+  const text=JSON.stringify(payload,null,2);
+  let sha='';
+  try{sha=localStorage.getItem(GH_SHA)||''}catch(e){}
+  try{
+    const cur=await ghGet(c);
+    if(cur){
+      if(sha&&cur.sha!==sha){
+        if(!confirm('GitHub의 파일이 이 PC에서 마지막으로 받은 내용과 다릅니다.\n다른 PC에서 저장했을 수 있습니다.\n\n[확인] 이 PC 내용으로 덮어씁니다\n[취소] 저장을 멈춥니다 (먼저 불러오기 권장)')){
+          return {state:'conflict'};
+        }
+      }
+      sha=cur.sha;
+    }else sha='';
+    const res=await ghPut(c,text,sha,'프로젝트 데이터 업데이트 '+payload.label);
+    try{
+      localStorage.setItem(GH_SHA,res.content.sha);
+      localStorage.setItem(GH_TS,payload.ts);
+    }catch(e){}
+    return {state:'ok',label:payload.label,count:Object.keys(payload.stores).length};
+  }catch(e){
+    console.error(e);
+    return {state:'fail',msg:e.message};
+  }
+}
+
+async function ghPull(auto){
+  const c=ghCfg();
+  if(!c){if(!auto)alert('먼저 "GitHub 동기화"에서 저장소와 토큰을 설정해 주세요.');return}
+  let f=null;
+  try{f=await ghGet(c)}
+  catch(e){if(!auto)alert('GitHub에서 불러오지 못했습니다.\n\n'+e.message);return}
+  if(!f){if(!auto)alert('저장소에 아직 데이터 파일이 없습니다.\n"지금 저장"을 먼저 실행해 주세요.');return}
+  let p=null;
+  try{p=JSON.parse(b64dec(f.content))}catch(e){}
+  if(!p||!p.stores){if(!auto)alert('데이터 파일 형식을 읽을 수 없습니다.');return}
+
+  let localTs='';
+  try{localTs=localStorage.getItem(GH_TS)||''}catch(e){}
+  if(auto){
+    if(p.ts===localTs)return;
+    if(!confirm('GitHub에 다른 저장본이 있습니다.\n저장 시각: '+(p.label||p.ts)
+      +'\n프로젝트 '+Object.keys(p.stores).length+'개\n\n[확인] 불러와서 이 PC 내용을 덮어씁니다\n[취소] 이 PC 내용을 그대로 씁니다')){
+      try{localStorage.setItem(GH_TS,p.ts);localStorage.setItem(GH_SHA,f.sha)}catch(e){}
+      return;
+    }
+  }else{
+    if(!confirm('GitHub에서 불러옵니다.\n저장 시각: '+(p.label||p.ts)
+      +'\n프로젝트 '+Object.keys(p.stores).length+'개\n\n이 PC에 저장된 내용은 덮어써집니다. 계속할까요?'))return;
+  }
+  if(!writePayload(p)){alert('불러온 내용을 저장하지 못했습니다.');return}
+  try{localStorage.setItem(GH_SHA,f.sha);localStorage.setItem(GH_TS,p.ts)}catch(e){}
+  alert('GitHub에서 불러왔습니다.\n화면을 새로 고칩니다.');
+  location.reload();
+}
+
+function ghDialog(){
+  const c=ghCfg()||{};
+  const body=document.createElement('div');
+  const mk=(lab,val,ph,type)=>{
+    body.appendChild(fieldLabel(lab));
+    const i=document.createElement('input');
+    i.type=type||'text';i.value=val||'';if(ph)i.placeholder=ph;
+    if(type==='password')i.autocomplete='off';
+    body.appendChild(i);return i;
+  };
+  const owner=mk('소유자 (GitHub 계정/조직)',c.owner,'예) taeyoung-kang');
+  const repo=mk('저장소 이름 (비공개 권장)',c.repo,'예) project-data');
+  const path=mk('파일 경로',c.path||'project-data.json','예) data/project-data.json');
+  const branch=mk('브랜치',c.branch||'main','main');
+  const token=mk('액세스 토큰','','토큰을 새로 입력하면 교체됩니다','password');
+
+  const warn=document.createElement('div');
+  warn.className='ghwarn';
+  warn.textContent='토큰은 이 브라우저에만 저장됩니다. 공용 PC에서는 사용하지 마세요. GitHub → Settings → Developer settings → Fine-grained tokens 에서 해당 저장소만 지정하고 Repository permissions → Contents 를 Read and write 로 발급하세요. 회사 자료를 올리는 것이므로 저장소는 반드시 Private 으로 만드세요.';
+  body.appendChild(warn);
+
+  const msg=document.createElement('div');msg.className='ghmsg';
+  const say=(cls,txt)=>{msg.className='ghmsg on '+cls;msg.textContent=txt};
+
+  const row=document.createElement('div');row.className='ghrow';
+  const cur=()=>({owner:owner.value.trim(),repo:repo.value.trim(),path:path.value.trim()||'project-data.json',
+    branch:branch.value.trim()||'main',token:token.value.trim()||(ghCfg()?ghCfg().token:'')});
+
+  const test=document.createElement('button');
+  test.textContent='연결 테스트';
+  test.onclick=async()=>{
+    const cc=cur();
+    if(!cc.owner||!cc.repo||!cc.token){say('ng','소유자, 저장소, 토큰을 모두 입력해 주세요.');return}
+    say('info','확인 중…');
+    try{
+      const f=await ghGet(cc);
+      if(f){
+        let p=null;try{p=JSON.parse(b64dec(f.content))}catch(e){}
+        say('ok','연결되었습니다. 파일이 이미 있습니다.'+(p&&p.label?(' 마지막 저장: '+p.label):''));
+      }else{
+        say('ok','연결되었습니다. 파일은 아직 없으며 저장할 때 새로 만들어집니다.');
+      }
+    }catch(e){say('ng',e.message)}
+  };
+  row.appendChild(test);
+
+  const pull=document.createElement('button');
+  pull.textContent='지금 불러오기';
+  pull.onclick=()=>{
+    const cc=cur();
+    if(!cc.owner||!cc.repo||!cc.token){say('ng','설정을 먼저 입력하고 저장해 주세요.');return}
+    try{localStorage.setItem(GH_CFG,JSON.stringify(cc))}catch(e){}
+    closeDialog();ghPull(false);
+  };
+  row.appendChild(pull);
+
+  const push=document.createElement('button');
+  push.className='primary';push.textContent='지금 저장';
+  push.onclick=async()=>{
+    const cc=cur();
+    if(!cc.owner||!cc.repo||!cc.token){say('ng','설정을 먼저 입력해 주세요.');return}
+    try{localStorage.setItem(GH_CFG,JSON.stringify(cc))}catch(e){}
+    say('info','저장 중…');
+    const r=await ghPush();
+    if(r.state==='ok'){say('ok','저장했습니다. ('+r.label+' · 프로젝트 '+r.count+'개)');refreshBackupStatus()}
+    else if(r.state==='conflict')say('info','저장을 멈췄습니다. "지금 불러오기"로 최신 내용을 받은 뒤 다시 저장하세요.');
+    else say('ng',r.msg||'저장에 실패했습니다.');
+  };
+  row.appendChild(push);
+  body.appendChild(row);
+  body.appendChild(msg);
+
+  openDialog({
+    title:'GitHub 동기화',
+    sub:'비공개 저장소에 전체 프로젝트 데이터를 JSON으로 보관합니다.',
+    ok:'설정 저장',
+    body:body,
+    onOk:()=>{
+      const cc=cur();
+      if(!cc.owner||!cc.repo)return '소유자와 저장소 이름을 입력해 주세요.';
+      if(!cc.token)return '액세스 토큰을 입력해 주세요.';
+      try{localStorage.setItem(GH_CFG,JSON.stringify(cc))}catch(e){}
+      refreshBackupStatus();
+      return null;
+    }
+  });
 }
 
 /* ===== 지정 폴더 저장 공통 ===== */
@@ -1465,7 +1683,7 @@ function downloadBlob(blob,name){
 /* ===== 데이터 포함 HTML 내보내기 ===== */
 const HTML_EXPORT_NAME='프로젝트관리_통합.html';
 
-function buildExportHtml(){
+function buildPayload(){
   save(true);
   const now=new Date();
   const label=now.getFullYear()+'-'+pad2(now.getMonth()+1)+'-'+pad2(now.getDate())
@@ -1478,6 +1696,23 @@ function buildExportHtml(){
       if(v&&typeof v==='object')payload.stores[p.key]=v;
     }catch(e){}
   });
+  return payload;
+}
+
+function writePayload(p){
+  if(!p||!p.stores)return false;
+  try{
+    Object.keys(p.stores).forEach(k=>localStorage.setItem(k,JSON.stringify(p.stores[k])));
+    if(Array.isArray(p.projects)&&p.projects.length)localStorage.setItem(REG_KEY,JSON.stringify(p.projects));
+    if(p.active)localStorage.setItem(ACTIVE_KEY,p.active);
+    return true;
+  }catch(e){return false}
+}
+
+function buildExportHtml(){
+  const payload=buildPayload();
+  const now=new Date(payload.ts);
+  const label=payload.label;
 
   const c=document.documentElement.cloneNode(true);
   c.querySelectorAll('tbody[id]').forEach(e=>{e.innerHTML=''});
@@ -1807,7 +2042,7 @@ async function refreshBackupStatus(){
   try{last=localStorage.getItem(lastSaveKey())||''}catch(e){}
   if(!h){
     el.className='pathbar off';
-    el.innerHTML='저장 경로: <b>미설정</b> — "저장 경로 선택"으로 폴더를 지정하면 모든 프로젝트가 그 폴더에 저장됩니다.';
+    el.innerHTML='저장 경로: <b>미설정</b> — "저장 경로 선택"으로 폴더를 지정하면 모든 프로젝트가 그 폴더에 저장됩니다.'+ghStatusLine();
     return;
   }
   let perm='granted';
@@ -1815,7 +2050,18 @@ async function refreshBackupStatus(){
   el.className='pathbar on';
   el.innerHTML='저장 경로: <b>'+esc(h.name)+'</b> 폴더'
     +(perm==='granted'?'':' <span class="warnp">(저장할 때 권한 확인 필요)</span>')
-    +(last?'<br>마지막 저장: '+esc(last):'');
+    +(last?'<br>마지막 저장: '+esc(last):'')
+    +ghStatusLine();
+}
+
+function ghStatusLine(){
+  const c=ghCfg();
+  if(!c)return '';
+  let ts='';
+  try{ts=localStorage.getItem(GH_TS)||''}catch(e){}
+  let when='';
+  if(ts){const dt=new Date(ts);if(!isNaN(dt))when=' · '+dt.getFullYear()+'-'+pad2(dt.getMonth()+1)+'-'+pad2(dt.getDate())+' '+pad2(dt.getHours())+':'+pad2(dt.getMinutes())}
+  return '<br>GitHub: <b>'+esc(c.owner+'/'+c.repo)+'</b>'+esc(when);
 }
 
 function applyProject(){
@@ -1848,4 +2094,5 @@ function switchProject(key){
 }
 
 document.querySelectorAll('[data-k]').forEach(e=>e.onchange=()=>save(true));applyProject();
+if(ghCfg())setTimeout(()=>{ghPull(true)},500);
 </script></body></html>
