@@ -1484,18 +1484,23 @@ async function saveAllProjects(){
     }catch(e){}
   });
 
-  const b=buildExportHtml();
-  const blob=new Blob([b.html],{type:'text/html;charset=utf-8'});
   const lines=['브라우저 저장: 프로젝트 '+names.length+'개'];
+  const useGh=!!ghCfg();
 
-  let gh=null;
-  if(ghCfg()){
-    gh=await ghPush();
+  if(useGh){
+    const gh=await ghPush();
     lines.push('GitHub: '+(gh.state==='ok'?'저장 완료'
       :gh.state==='conflict'?'중단됨 (먼저 불러오기 필요)'
       :('실패 — '+(gh.msg||''))));
+    lines.push('폴더 HTML: GitHub 동기화 중이라 건너뜀');
+    refreshBackupStatus();
+    alert('전체 저장을 마쳤습니다.\n\n'+lines.join('\n')
+      +'\n\n포함 프로젝트: '+names.join(' / '));
+    return;
   }
 
+  const b=buildExportHtml();
+  const blob=new Blob([b.html],{type:'text/html;charset=utf-8'});
   const r=await writeToBackupFolder(blob,HTML_EXPORT_NAME);
   if(r==='ok'){
     lines.push('폴더 HTML: '+HTML_EXPORT_NAME);
