@@ -1634,6 +1634,26 @@ async function ghPull(auto){
 function ghDialog(){
   const c=ghCfg()||{};
   const body=document.createElement('div');
+
+  const help=document.createElement('details');
+  help.className='help';
+  const sum=document.createElement('summary');
+  sum.textContent='GitHub 등록 설명서 (처음 하시면 눌러보세요)';
+  help.appendChild(sum);
+  const ol=document.createElement('ol');
+  ['GitHub(github.com)에 로그인한 뒤 오른쪽 위 + 버튼 → New repository 로 저장소를 새로 만듭니다.',
+   '저장소 이름을 정하고, 반드시 Private(비공개) 로 설정한 뒤 Create repository 를 누릅니다.',
+   '위 "소유자" 칸에는 내 GitHub 계정(또는 조직) 이름을, "저장소 이름" 칸에는 방금 만든 저장소 이름을 입력합니다.',
+   '오른쪽 위 내 프로필 사진 → Settings → 왼쪽 메뉴 맨 아래 Developer settings 로 들어갑니다.',
+   'Personal access tokens → Fine-grained tokens → Generate new token 을 누릅니다.',
+   'Repository access 에서 "Only select repositories" 를 고르고 방금 만든 저장소를 선택합니다.',
+   'Permissions → Repository permissions 에서 Contents 항목을 Read and write 로 바꿉니다.',
+   'Generate token 을 눌러 나온 토큰 값을 복사해 위 "액세스 토큰" 칸에 붙여넣습니다. (토큰은 이때 한 번만 보이므로 꼭 복사해 두세요)',
+   '"연결 테스트"를 눌러 정상 연결되는지 확인한 뒤 "설정 저장"을 누릅니다.'
+  ].forEach(t=>{const li=document.createElement('li');li.textContent=t;ol.appendChild(li)});
+  help.appendChild(ol);
+  body.appendChild(help);
+
   const mk=(lab,val,ph,type)=>{
     body.appendChild(fieldLabel(lab));
     const i=document.createElement('input');
