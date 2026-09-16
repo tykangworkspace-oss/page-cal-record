@@ -12,6 +12,7 @@ main{padding:18px;max-width:1600px;margin:auto}.page{display:none}.page.on{displ
 .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card,.box{background:#fff;border:1px solid #dde4ec;border-radius:11px;padding:14px;box-shadow:0 3px 10px #0f172a10}
 .metric{font-size:28px;font-weight:800}.muted{color:#6b7280;font-size:12px}.bar{height:9px;background:#e5e7eb;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:#2563eb}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}label{display:block;font-size:12px;margin:8px 0}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
 input,select,textarea{width:100%;box-sizing:border-box;padding:7px;border:1px solid #d7dee8;border-radius:6px;font:inherit}textarea{min-height:80px}
 .tablebox{overflow:auto;border:1px solid #dde4ec;border-radius:10px;background:#fff}table{width:100%;border-collapse:collapse;min-width:1050px}th,td{border-bottom:1px solid #eef2f6;padding:7px 8px;font-size:12px;text-align:left;vertical-align:top}th{background:#f8fafc}
 td[contenteditable],td input,td select{background:#fffdf0}.note{padding:10px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:7px;font-size:12px}
@@ -26,11 +27,15 @@ th .colx:hover{color:#dc2626}
 .inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .inline input{width:auto;min-width:260px;flex:1}.inline select{width:auto}
 .warn{padding:10px;background:#fff7ed;border-left:4px solid #f59e0b;border-radius:7px;font-size:12px}
-.callrow{display:flex;gap:8px;align-items:center;padding:6px 2px;border-bottom:1px solid #eef2f6;font-size:13px}
-.callrow .calname{font-weight:600}.callrow .calid{color:#6b7280;font-size:11px}
+.callrow{display:flex;gap:8px;align-items:center;padding:6px 2px;border-bottom:1px solid #eef2f6;font-size:13px;cursor:pointer}
+.callrow:hover,.callrow.hoverlink{background:#eff6ff}
+.callrow .calname{font-weight:600}.callrow .calid{color:#6b7280;font-size:11px;margin-left:auto;white-space:nowrap}
 .callrow input[type=checkbox]{width:auto;flex:0 0 auto;margin:0}
 .callrow button{padding:4px 9px;font-size:12px;margin-left:auto}
 .swatch{width:14px;height:14px;border-radius:4px;display:inline-block;flex:0 0 auto;border:1px solid #00000020}
+.callist{max-height:240px;overflow:auto;border:1px solid #eef2f6;border-radius:8px;margin:0 0 10px;padding:2px 10px}
+.calempty{padding:10px 2px;color:#94a3b8;font-size:12px}
+.cbar.hoverlink{outline:2px solid #2563eb99;outline-offset:1px;z-index:2}
 .help{font-size:12px;background:#f8fafc;border:1px solid #e5eaf1;border-radius:8px;padding:10px;margin-top:10px}
 .help summary{cursor:pointer;font-weight:700;color:#1d4ed8}.help ol{margin:8px 0 0 18px;padding:0;line-height:1.7}
 .openrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -94,7 +99,11 @@ header{display:flex;gap:18px;align-items:flex-start;justify-content:space-betwee
 #sheetToggles input{width:auto;margin:0;flex:0 0 auto}
 #sheetToggles .cnt{font-weight:400;color:#94a3b8;font-size:11px}
 th .coltype{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#eef2f7;color:#64748b;font-size:10px;font-weight:700;vertical-align:1px}
-td.cell-date,td.cell-number,td.cell-select,td.cell-multi{padding:4px 6px}
+td.cell-date,td.cell-number,td.cell-select,td.cell-multi,td.cell-assignee,td.cell-doc{padding:4px 6px}
+.docwrap{display:flex;align-items:center;gap:6px;min-width:0}
+.doclink{padding:4px 10px;font-size:12px;border-radius:999px;background:#eef2f7;border:1px solid #dde4ec;cursor:pointer;font-weight:700;color:#334155;flex:0 0 auto}
+.doclink:hover{background:#e2e8f0}
+.docprev{font-size:11px;color:#94a3b8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .cellin{width:100%;border:1px solid transparent;background:transparent;padding:5px 6px;font-size:13px;border-radius:6px}
 .cellin:hover{border-color:#dde4ec}
 .cellin:focus{border-color:#2563eb;background:#fff;outline:none}
@@ -130,6 +139,13 @@ select.cellin{cursor:pointer}
 th{position:relative}
 th .colres{position:absolute;top:0;right:-4px;width:9px;height:100%;cursor:col-resize;z-index:3}
 th .colres:hover,th .colres.drag{background:linear-gradient(to right,transparent 3px,#2563eb 3px,#2563eb 5px,transparent 5px)}
+.coldrag{cursor:grab;color:#b6c0cc;font-size:13px;margin-right:4px;user-select:none;display:inline-block}
+.coldrag:active{cursor:grabbing}
+th.dragging{opacity:.4}
+th.dragover{background:#dbeafe!important}
+nav button.dragging,.projbar button.dragging{opacity:.45}
+nav button.dragover{outline:2px dashed #2563eb;outline-offset:-2px}
+.projbar button.dragover{outline:2px dashed #fff;outline-offset:-2px}
 .tablebox td{overflow:hidden;word-break:break-word;overflow-wrap:anywhere;white-space:pre-wrap}
 .tablebox th .colname{display:inline-block;max-width:calc(100% - 52px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:bottom}
 .celltext{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
@@ -184,13 +200,29 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 .ghmsg.ng{background:#fef2f2;border:1px solid #fecaca;color:#991b1b}
 .ghmsg.info{background:#f8fafc;border:1px solid #e2e8f0;color:#475569}
 .ghwarn{font-size:11px;color:#92400e;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:9px 11px;margin-top:12px;line-height:1.6}
-@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+.infotop{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px 18px}
+.infotop .kl{font-size:11px;color:#94a3b8;font-weight:800;letter-spacing:.02em}
+.infotop .kb{font-size:15px;font-weight:800;color:#1f2937;margin-top:3px}
+.infolong{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 14px;margin-top:14px}
+.infolong .kvl{background:#f8fafc;border:1px solid #eef2f6;border-radius:9px;padding:10px 12px}
+.infolong .kl{font-size:11px;color:#94a3b8;font-weight:800}
+.infolong .kt{font-size:13px;color:#334155;margin-top:5px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.kempty{color:#cbd5e1;font-weight:400;font-style:normal}
+.memberlist{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.memberchip{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 12px;border-radius:999px;background:#eef2f7;color:#334155;font-size:13px;font-weight:700}
+.memberchip b{cursor:pointer;opacity:.5;font-weight:900;width:18px;height:18px;line-height:18px;text-align:center;border-radius:999px}
+.memberchip b:hover{opacity:1;background:#fee2e2;color:#dc2626}
+.memberadd{display:flex;gap:8px;margin-top:10px}
+.memberadd input{flex:1}
+.memberadd button{flex:0 0 auto;white-space:nowrap}
+.memberempty{color:#94a3b8;font-size:12px}
+@media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}.infolong{grid-template-columns:1fr}}
 </style></head>
 <body>
 <header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button onclick="ghDialog()" title="비공개 GitHub 저장소에 데이터를 저장하고 다른 PC에서 불러옵니다">GitHub 동기화</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
 <nav><button class="on" onclick="tab('dashboard',this)">Dashboard</button><button class="" onclick="tab('info',this)">Project Info</button><button class="" data-fixed="wbs" onclick="tab('wbs',this)">WBS</button><button class="" data-fixed="docs" onclick="tab('docs',this)">문서 List</button><button class="" data-fixed="issue" onclick="tab('issue',this)">Issue List</button><button class="" data-fixed="change" onclick="tab('change',this)">변경 이력</button><button class="" data-fixed="test" onclick="tab('test',this)">시험 계획/결과</button><button class="" data-fixed="release" onclick="tab('release',this)">Release Check</button><button id="addSheetBtn" class="addsheet" title="시트 추가" onclick="addSheet()">+</button></nav>
 <main><section id="dashboard" class="page on"><div class="actions"><h2>Dashboard</h2></div>
-<div class="cards"><div class="card"><div class="muted" id="cardLabel1">WBS 진행률</div><div class="metric" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div><div class="card"><div class="muted">완료 업무</div><div class="metric" id="done">0</div></div><div class="card"><div class="muted" id="cardLabel3">오픈 Issue</div><div class="metric" id="open">0</div></div><div class="card"><div class="muted">Release Check</div><div class="metric" id="rel">0%</div><div class="bar"><i id="relbar"></i></div></div></div><div class="box" style="margin-top:12px"><div class="gbar-actions"><h3 style="margin:0 8px 0 0">간트 차트</h3>
+<div class="cards"><div class="card"><div class="muted" id="cardLabel1">WBS 진행률</div><div class="metric" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div><div class="card"><div class="muted">완료 업무</div><div class="metric" id="done">0</div></div><div class="card"><div class="muted" id="cardLabel3">오픈 Issue</div><div class="metric" id="open">0</div></div><div class="card"><div class="muted">Release Check</div><div class="metric" id="rel">0%</div><div class="bar"><i id="relbar"></i></div></div></div><div class="box" style="margin-top:12px"><h3 style="margin:0 0 10px">기본정보</h3><div id="dashInfoGrid"></div></div><div class="box" style="margin-top:12px"><div class="gbar-actions"><h3 style="margin:0 8px 0 0">간트 차트</h3>
 <button onclick="ganttShift(-1)">◀ 이전 연도</button><span id="ganttLabel">-</span><button onclick="ganttShift(1)">다음 연도 ▶</button>
 <button onclick="ganttToday()">올해</button></div>
 <div class="gwrap" id="ganttChart"></div>
@@ -201,8 +233,12 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="actions" style="margin-top:10px"><button class="primary" onclick="saveProjectMeta()">표시 정보 저장</button><button onclick="addProject()">+ 프로젝트 추가</button><button onclick="deleteProject()">현재 프로젝트 삭제</button></div>
 <div class="muted" style="margin-top:6px">이름만 바뀌며 입력한 데이터는 그대로 유지됩니다. 상태를 <b>완료</b>로 바꾸면 상단 버튼 줄에서 빠지고 "완료" 묶음으로 들어갑니다.</div></div><div class="box" style="margin-top:12px"><h3>표시할 시트</h3>
 <div class="muted">체크를 해제하면 상단 탭에서 사라집니다. 입력한 데이터는 그대로 남아 있어 다시 체크하면 복구됩니다. 프로젝트마다 따로 설정됩니다.</div>
-<div id="sheetToggles" style="margin-top:8px"></div></div><div class="box" style="margin-top:12px"><h3>기본정보</h3>
-<div class="grid2"><label>PM<input data-k="info.pm"></label><label>시작일<input type="date" data-k="info.start"></label><label>목표 종료일<input type="date" data-k="info.end"></label></div></div><div class="box" style="margin-top:12px"><div class="grid2"><label>목적<textarea data-k="info.purpose"></textarea></label><label>범위<textarea data-k="info.scope"></textarea></label><label>성공조건<textarea data-k="info.success"></textarea></label><label>Risk<textarea data-k="info.risk"></textarea></label></div></div></section><section id="wbs" class="page"><div class="actions"><h2>WBS</h2><button class="primary" onclick="add('wbs')">행 추가</button><button onclick="manageCols('wbs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('wbs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>단계</th><th>업무</th><th>담당</th><th>시작</th><th>종료</th><th>상태</th><th>진행률</th><th>산출물</th><th>완료조건</th><th>비고</th><th></th></tr></thead><tbody id="wbsRows"></tbody></table></div></section><section id="docs" class="page"><div class="actions"><h2>문서 List</h2><button class="primary" onclick="add('docs')">행 추가</button><button onclick="manageCols('docs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('docs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>문서명</th><th>구분</th><th>Rev</th><th>담당</th><th>상태</th><th>작성일</th><th>승인자</th><th>파일/링크</th><th>비고</th><th></th></tr></thead><tbody id="docsRows"></tbody></table></div></section><section id="issue" class="page"><div class="actions"><h2>Issue List</h2><button class="primary" onclick="add('issue')">행 추가</button><button onclick="manageCols('issue')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('issue')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>발생일</th><th>구분</th><th>문제</th><th>원인</th><th>조치</th><th>담당</th><th>예정일</th><th>상태</th><th>재시험 결과</th><th>비고</th><th></th></tr></thead><tbody id="issueRows"></tbody></table></div></section><section id="change" class="page"><div class="actions"><h2>변경 이력</h2><button class="primary" onclick="add('change')">행 추가</button><button onclick="manageCols('change')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('change')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>일자</th><th>대상</th><th>기존 Rev/값</th><th>변경 Rev/값</th><th>변경내용</th><th>변경사유</th><th>영향</th><th>담당</th><th>승인</th><th></th></tr></thead><tbody id="changeRows"></tbody></table></div></section><section id="test" class="page"><div class="actions"><h2>시험 계획/결과</h2><button class="primary" onclick="add('test')">행 추가</button><button onclick="manageCols('test')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('test')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>분류</th><th>시험항목</th><th>조건</th><th>기대결과</th><th>실제결과</th><th>담당</th><th>시험일</th><th>결과</th><th>재시험</th><th>비고</th><th></th></tr></thead><tbody id="testRows"></tbody></table></div></section><section id="release" class="page"><div class="actions"><h2>Release Check</h2><button class="primary" onclick="add('release')">행 추가</button><button onclick="manageCols('release')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('release')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>No</th><th>Release 항목</th><th>필수</th><th>담당</th><th>확인</th><th>완료일</th><th>증빙 문서</th><th>비고</th><th></th></tr></thead><tbody id="releaseRows"></tbody></table></div></section></main>
+<div id="sheetToggles" style="margin-top:8px"></div></div><div class="box" style="margin-top:12px"><h3>담당자 / 팀 목록</h3>
+<div class="muted">이 프로젝트에 참여하는 담당자·팀을 한 명씩 추가하세요. 시트에서 "담당" 속성 열을 만들면 이 목록 중에서 선택할 수 있습니다.</div>
+<div class="memberlist" id="memberList"></div>
+<div class="memberadd"><input id="memberInput" type="text" placeholder="이름 입력 (예: 강태영)" onkeydown="if(event.key==='Enter'){event.preventDefault();addMember()}"><button class="primary" onclick="addMember()">+ 추가</button></div>
+</div><div class="box" style="margin-top:12px"><h3>기본정보</h3>
+<div class="grid3"><label>PM<input data-k="info.pm"></label><label>시작일<input type="date" data-k="info.start"></label><label>목표 종료일<input type="date" data-k="info.end"></label></div></div><div class="box" style="margin-top:12px"><div class="grid2"><label>목적<textarea data-k="info.purpose"></textarea></label><label>범위<textarea data-k="info.scope"></textarea></label><label>성공조건<textarea data-k="info.success"></textarea></label><label>Risk<textarea data-k="info.risk"></textarea></label></div></div></section><section id="wbs" class="page"><div class="actions"><h2>WBS</h2><button class="primary" onclick="add('wbs')">행 추가</button><button onclick="addFixedCol('wbs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('wbs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('wbs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>단계</th><th>업무</th><th>담당</th><th>시작</th><th>종료</th><th>상태</th><th>진행률</th><th>산출물</th><th>완료조건</th><th>비고</th><th>상위</th><th></th></tr></thead><tbody id="wbsRows"></tbody></table></div></section><section id="docs" class="page"><div class="actions"><h2>문서 List</h2><button class="primary" onclick="add('docs')">행 추가</button><button onclick="addFixedCol('docs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('docs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('docs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>문서명</th><th>구분</th><th>Rev</th><th>담당</th><th>상태</th><th>작성일</th><th>승인자</th><th>파일/링크</th><th>비고</th><th></th></tr></thead><tbody id="docsRows"></tbody></table></div></section><section id="issue" class="page"><div class="actions"><h2>Issue List</h2><button class="primary" onclick="add('issue')">행 추가</button><button onclick="addFixedCol('issue')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('issue')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('issue')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>발생일</th><th>구분</th><th>문제</th><th>원인</th><th>조치</th><th>담당</th><th>예정일</th><th>상태</th><th>재시험 결과</th><th>비고</th><th></th></tr></thead><tbody id="issueRows"></tbody></table></div></section><section id="change" class="page"><div class="actions"><h2>변경 이력</h2><button class="primary" onclick="add('change')">행 추가</button><button onclick="addFixedCol('change')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('change')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('change')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>일자</th><th>대상</th><th>기존 Rev/값</th><th>변경 Rev/값</th><th>변경내용</th><th>변경사유</th><th>영향</th><th>담당</th><th>승인</th><th></th></tr></thead><tbody id="changeRows"></tbody></table></div></section><section id="test" class="page"><div class="actions"><h2>시험 계획/결과</h2><button class="primary" onclick="add('test')">행 추가</button><button onclick="addFixedCol('test')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('test')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('test')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>분류</th><th>시험항목</th><th>조건</th><th>기대결과</th><th>실제결과</th><th>담당</th><th>시험일</th><th>결과</th><th>재시험</th><th>비고</th><th></th></tr></thead><tbody id="testRows"></tbody></table></div></section><section id="release" class="page"><div class="actions"><h2>Release Check</h2><button class="primary" onclick="add('release')">행 추가</button><button onclick="addFixedCol('release')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('release')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('release')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>No</th><th>Release 항목</th><th>필수</th><th>담당</th><th>확인</th><th>완료일</th><th>증빙 문서</th><th>비고</th><th></th></tr></thead><tbody id="releaseRows"></tbody></table></div></section></main>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
 <script>
 const ACTIVE_KEY='pm_active_project_v1';
@@ -285,15 +321,231 @@ function paintSelect(el){
 }
 
 function select(v,opts){return '<select>'+opts.map(o=>'<option '+(v===o?'selected':'')+'>'+o+'</option>').join('')+'</select>'}
-const cfg={"wbs": {"el": "wbsRows", "n": 11, "date": [4, 5], "num": [7], "sel": {"6": ["예정", "진행중", "완료", "보류"]}, "defaults": {"6": "예정", "7": "0"}}, "docs": {"el": "docsRows", "n": 10, "date": [6], "num": [], "sel": {"5": ["Draft", "Review", "Approved", "Released", "미작성"]}, "defaults": {"3": "RevA", "5": "Draft"}}, "issue": {"el": "issueRows", "n": 11, "date": [1, 7], "num": [], "sel": {"8": ["Open", "In Progress", "Closed"]}, "defaults": {"8": "Open"}}, "change": {"el": "changeRows", "n": 10, "date": [1], "num": [], "sel": {}, "defaults": {"9": "미확인"}}, "test": {"el": "testRows", "n": 11, "date": [7], "num": [], "sel": {"8": ["Not Tested", "Pass", "Fail", "Conditional"]}, "defaults": {"8": "Not Tested"}}, "release": {"el": "releaseRows", "n": 8, "date": [5], "num": [], "sel": {"2": ["필수", "선택"], "4": ["미확인", "완료", "N/A"]}, "defaults": {"2": "필수", "4": "미확인"}}};
+const cfg={"wbs": {"el": "wbsRows", "n": 12, "date": [4, 5], "num": [7], "sel": {"6": ["예정", "진행중", "완료", "보류"]}, "asg": [3], "parent": 11, "defaults": {"6": "예정", "7": "0"}}, "docs": {"el": "docsRows", "n": 10, "date": [6], "num": [], "sel": {"5": ["Draft", "Review", "Approved", "Released", "미작성"]}, "asg": [4], "defaults": {"3": "RevA", "5": "Draft"}}, "issue": {"el": "issueRows", "n": 11, "date": [1, 7], "num": [], "sel": {"8": ["Open", "In Progress", "Closed"]}, "asg": [6], "defaults": {"8": "Open"}}, "change": {"el": "changeRows", "n": 10, "date": [1], "num": [], "sel": {}, "asg": [8], "defaults": {"9": "미확인"}}, "test": {"el": "testRows", "n": 11, "date": [7], "num": [], "sel": {"8": ["Not Tested", "Pass", "Fail", "Conditional"]}, "asg": [6], "defaults": {"8": "Not Tested"}}, "release": {"el": "releaseRows", "n": 8, "date": [5], "num": [], "sel": {"2": ["필수", "선택"], "4": ["미확인", "완료", "N/A"]}, "asg": [3], "defaults": {"2": "필수", "4": "미확인"}}};
+function wbsOrder(){
+  const rows=d.wbs||[];
+  const byParent={};
+  rows.forEach((r,i)=>{
+    const pid=String(r[11]||'').trim();
+    (byParent[pid]=byParent[pid]||[]).push(i);
+  });
+  const order=[],seen=new Set();
+  function walk(pid,depth){
+    (byParent[pid]||[]).forEach(i=>{
+      if(seen.has(i))return;
+      seen.add(i);
+      order.push({ri:i,depth:depth});
+      const id=String(rows[i][0]||'').trim();
+      if(id)walk(id,depth+1);
+    });
+  }
+  walk('',0);
+  rows.forEach((r,i)=>{if(!seen.has(i)){seen.add(i);order.push({ri:i,depth:0})}});
+  return order;
+}
+
+function wbsHasChildren(ri){
+  const rows=d.wbs||[];
+  const id=String((rows[ri]||[])[0]||'').trim();
+  if(!id)return false;
+  return rows.some((rr,rj)=>rj!==ri&&String(rr[11]||'').trim()===id);
+}
+
+function wbsDescendants(ri){
+  const rows=d.wbs||[];
+  const id=String((rows[ri]||[])[0]||'').trim();
+  if(!id)return [];
+  let out=[];
+  rows.forEach((rr,rj)=>{
+    if(rj===ri)return;
+    if(String(rr[11]||'').trim()===id){
+      const cid=String(rr[0]||'').trim();
+      if(cid)out.push(cid);
+      out=out.concat(wbsDescendants(rj));
+    }
+  });
+  return out;
+}
+
+function extraCellEditor(type,ri,ci){
+  const def=extraCols(type)[ci-cfg[type].n]||{};
+  const ty=def.type||'text';
+  const opts=def.opts||[];
+  const raw=d[type][ri][ci];
+  const val=raw==null?'':String(raw);
+  const commit=v=>{d[type][ri][ci]=v;save(true)};
+
+  if(ty==='date'||ty==='number'){
+    const el=document.createElement('input');
+    el.type=(ty==='date')?'date':'number';
+    el.className='cellin';el.value=val;
+    el.onchange=()=>commit(el.value.trim());
+    return el;
+  }
+  if(ty==='select'){
+    const sel=document.createElement('select');
+    sel.className='cellin';
+    const blank=document.createElement('option');blank.value='';blank.textContent='—';
+    sel.appendChild(blank);
+    opts.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
+    if(val&&opts.indexOf(val)<0){const op=document.createElement('option');op.value=val;op.textContent=val;sel.appendChild(op)}
+    sel.value=val;
+    if(val)sel.classList.add('statsel');
+    sel.style.cssText=val?chipStyle(opts,val):'';
+    sel.onchange=()=>{commit(sel.value);render(type)};
+    return sel;
+  }
+  if(ty==='assignee'){
+    const sel=document.createElement('select');
+    sel.className='cellin';
+    const blank=document.createElement('option');blank.value='';blank.textContent='—';
+    sel.appendChild(blank);
+    const list=d.members||[];
+    list.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
+    if(val&&list.indexOf(val)<0){const op=document.createElement('option');op.value=val;op.textContent=val+' (목록에 없음)';sel.appendChild(op)}
+    sel.value=val;
+    if(val)sel.classList.add('statsel');
+    sel.style.cssText=val?chipStyle(list,val):'';
+    sel.onchange=()=>{commit(sel.value);render(type)};
+    return sel;
+  }
+  if(ty==='multi'){
+    const box=document.createElement('div');
+    box.className='multibox';
+    const cur=val?val.split(',').map(x=>x.trim()).filter(Boolean):[];
+    cur.forEach(v=>{
+      const chip=document.createElement('span');
+      chip.className='chip';chip.style.cssText=chipStyle(opts,v);
+      chip.textContent=v;
+      const x=document.createElement('b');x.textContent='×';
+      x.onclick=()=>{commit(cur.filter(y=>y!==v).join(', '));render(type)};
+      chip.appendChild(x);box.appendChild(chip);
+    });
+    const rest=opts.filter(o=>cur.indexOf(o)<0);
+    if(rest.length){
+      const sel=document.createElement('select');
+      sel.className='addsel';
+      const blank=document.createElement('option');blank.value='';blank.textContent='＋';
+      sel.appendChild(blank);
+      rest.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
+      sel.onchange=()=>{if(!sel.value)return;commit(cur.concat([sel.value]).join(', '));render(type)};
+      box.appendChild(sel);
+    }
+    return box;
+  }
+  if(ty==='doc'){
+    const wrap=document.createElement('div');
+    wrap.className='docwrap';
+    const has=!!val.trim();
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='doclink';
+    btn.textContent=has?'📄 문서 열기':'+ 문서 만들기';
+    btn.title=has?'문서를 열어서 수정합니다':'새 문서를 만듭니다';
+    btn.onclick=()=>openFixedDocEditor(type,ri,ci);
+    wrap.appendChild(btn);
+    if(has){
+      const prev=document.createElement('span');prev.className='docprev';
+      const flat=val.trim().replace(/\s+/g,' ');
+      prev.textContent=flat.slice(0,24)+(flat.length>24?'…':'');
+      wrap.appendChild(prev);
+    }
+    return wrap;
+  }
+  const box=document.createElement('div');
+  box.className='celltext';box.contentEditable='true';box.textContent=val;
+  box.onblur=()=>commit(box.textContent.trim());
+  return box;
+}
+
+function openFixedDocEditor(type,ri,ci){
+  const def=extraCols(type)[ci-cfg[type].n];
+  const raw=d[type][ri][ci];
+  const val=raw==null?'':String(raw);
+  const ni=(CAL_NAMECOL[type]!=null)?CAL_NAMECOL[type]:0;
+  const rowLabel=String(d[type][ri][ni]||d[type][ri][0]||'').trim()||('행 '+(ri+1));
+  const body=document.createElement('div');
+  const ta=document.createElement('textarea');
+  ta.value=val;
+  ta.placeholder='자유롭게 메모나 문서를 작성하세요.';
+  ta.style.cssText='min-height:320px;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.6;border:1px solid #dde4ec;border-radius:8px;padding:10px;resize:vertical';
+  body.appendChild(ta);
+  openDialog({
+    title:(def&&def.name)||'텍스트탭',
+    sub:'"'+rowLabel+'" 행의 문서',
+    ok:'저장',
+    body:body,
+    onOk:()=>{
+      d[type][ri][ci]=ta.value;
+      render(type);save(true);
+      return null;
+    }
+  });
+  setTimeout(()=>{try{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}catch(e){}},40);
+}
+
 function render(type){
   rebuildHead(type);
   const c=cfg[type],box=document.getElementById(c.el),vis=visibleCols(type);
   box.innerHTML='';
-  (d[type]||[]).forEach((r,ri)=>{
+  const order=(type==='wbs')?wbsOrder():(d[type]||[]).map((r,i)=>({ri:i,depth:0}));
+  order.forEach(({ri,depth})=>{
+    const r=d[type][ri];
     const tr=document.createElement('tr');
+    if(depth>0)tr.style.background='#fafbfc';
     vis.forEach(ci=>{
       const v=r[ci],td=document.createElement('td');
+      if(ci>=c.n){
+        td.appendChild(extraCellEditor(type,ri,ci));
+        tr.appendChild(td);
+        return;
+      }
+      if(c.parent!=null&&ci===c.parent){
+        const rows=d[type];
+        const selfId=String(r[0]||'').trim();
+        const excluded=new Set([selfId].concat(wbsDescendants(ri)));
+        const el=document.createElement('select');
+        el.className='cellin';
+        const blank=document.createElement('option');blank.value='';blank.textContent='(최상위)';
+        el.appendChild(blank);
+        rows.forEach((rr,rj)=>{
+          if(rj===ri)return;
+          const rid=String(rr[0]||'').trim();
+          if(!rid||excluded.has(rid))return;
+          const op=document.createElement('option');op.value=rid;op.textContent=rid+' · '+(rr[2]||'(제목 없음)');
+          el.appendChild(op);
+        });
+        const curVal=String(v||'').trim();
+        if(curVal&&!rows.some(rr=>String(rr[0]||'').trim()===curVal)){
+          const op=document.createElement('option');op.value=curVal;op.textContent=curVal+' (없는 ID)';el.appendChild(op);
+        }
+        el.value=curVal;
+        el.onchange=()=>{d[type][ri][ci]=el.value;render(type);save(true)};
+        td.appendChild(el);
+        tr.appendChild(td);
+        return;
+      }
+      if(c.asg&&c.asg.includes(ci)){
+        const list=d.members||[];
+        const el=document.createElement('select');
+        el.className='cellin';
+        const blank=document.createElement('option');blank.value='';blank.textContent='—';
+        el.appendChild(blank);
+        list.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;el.appendChild(op)});
+        if(v&&list.indexOf(v)<0){
+          const op=document.createElement('option');op.value=v;op.textContent=v+' (목록에 없음)';el.appendChild(op);
+        }
+        el.value=v||'';
+        if(v){el.classList.add('statsel');el.style.cssText=chipStyle(list,v)}
+        el.onchange=()=>{
+          d[type][ri][ci]=el.value;
+          el.classList.toggle('statsel',!!el.value);
+          el.style.cssText=el.value?chipStyle(list,el.value):'';
+          save(true);
+        };
+        td.appendChild(el);
+        tr.appendChild(td);
+        return;
+      }
       let n=null;
       if(c.sel&&c.sel[ci])n=select(v,c.sel[ci]);
       else if(c.date.includes(ci))n='<input type="date" value="'+(v||'')+'">';
@@ -307,18 +559,27 @@ function render(type){
         td.contentEditable='true';td.textContent=v==null?'':v;
         td.onblur=()=>{d[type][ri][ci]=td.textContent.trim();save(true)};
       }
+      if(type==='wbs'&&ci===2){
+        const dep=Math.min(depth,4);
+        td.style.paddingLeft=(10+dep*20)+'px';
+        if(dep>0){td.style.borderLeft='3px solid #cbd5e1';td.style.color='#64748b'}
+        else if(wbsHasChildren(ri)){td.style.fontWeight='800'}
+      }
       tr.appendChild(td);
     });
     const x=document.createElement('td');
     x.innerHTML='<button>삭제</button>';
-    x.firstChild.onclick=()=>{if(confirm('이 행을 삭제할까요?')){d[type].splice(ri,1);render(type);save(true)}};
+    x.firstChild.onclick=()=>{
+      const warn=(type==='wbs'&&wbsHasChildren(ri))?'\n하위 업무는 삭제되지 않고 "최상위"로 올라갑니다.':'';
+      if(confirm('이 행을 삭제할까요?'+warn)){d[type].splice(ri,1);render(type);save(true)}
+    };
     tr.appendChild(x);
     box.appendChild(tr);
   });
   setupFixedTable(type);
 }
 
-function add(type){let n=cfg[type].n,r=new Array(n).fill(''),t=Date.now().toString().slice(-4);r[0]=type.toUpperCase()+'-'+t;if(cfg[type].defaults)Object.entries(cfg[type].defaults).forEach(([k,v])=>r[+k]=v);d[type].push(r);render(type);save(true)}
+function add(type){let n=cfg[type].n+extraCols(type).length,r=new Array(n).fill(''),t=Date.now().toString().slice(-4);r[0]=type.toUpperCase()+'-'+t;if(cfg[type].defaults)Object.entries(cfg[type].defaults).forEach(([k,v])=>r[+k]=v);d[type].push(r);render(type);save(true)}
 function update(){
   const w=isHidden('wbs')?[]:(d.wbs||[]);
   const ts=taskStats();
@@ -350,7 +611,20 @@ function update(){
   if(lab)lab.textContent=(!w.length&&ts.total)?'업무 완료율':'WBS 진행률';
   if(lab2)lab2.textContent=(!issueOn&&ts.total)?'남은 업무':'오픈 Issue';
 
-  renderGantt();renderSheetToggles();renderAllCalendars();
+  renderGantt();renderSheetToggles();renderAllCalendars();renderDashInfo();
+}
+
+function renderDashInfo(){
+  const box=document.getElementById('dashInfoGrid');
+  if(!box)return;
+  const info=d.info||{};
+  const kv=(k,v)=>'<div class="kv"><div class="kl">'+esc(k)+'</div><div class="kb">'+(v?esc(v):'<span class="kempty">미입력</span>')+'</div></div>';
+  const kvl=(k,v)=>'<div class="kvl"><div class="kl">'+esc(k)+'</div><div class="kt">'+(v?esc(v):'<span class="kempty">미입력</span>')+'</div></div>';
+  box.innerHTML='<div class="infotop">'
+    +kv('PM',info.pm)+kv('시작일',info.start)+kv('목표 종료일',info.end)
+    +'</div><div class="infolong">'
+    +kvl('목적',info.purpose)+kvl('범위',info.scope)+kvl('성공조건',info.success)+kvl('Risk',info.risk)
+    +'</div>';
 }
 const BACKUP_DIR_DB='pm_backup_directory_v1';
 const BACKUP_DIR_STORE='handles';
@@ -434,7 +708,7 @@ async function resetData(){
 
 /* ===== 열 너비 조정 ===== */
 const COLW_MIN=60,COLW_ACT=74;
-const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190};
+const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150};
 
 function fixedWidths(id){
   if(!d.colw||typeof d.colw!=='object')d.colw={};
@@ -589,7 +863,9 @@ const TYPE_CHOICES=[
   {v:'date',label:'날짜',desc:'달력에서 선택 · 간트 차트에 반영'},
   {v:'number',label:'숫자',desc:'진행률, 수량 등'},
   {v:'select',label:'선택',desc:'정해둔 항목 중 하나'},
-  {v:'multi',label:'다중 선택',desc:'정해둔 항목 중 여러 개'}
+  {v:'multi',label:'다중 선택',desc:'정해둔 항목 중 여러 개'},
+  {v:'assignee',label:'담당',desc:'Project Info에 등록한 담당자·팀 중에서 선택'},
+  {v:'doc',label:'텍스트탭',desc:'+ 버튼을 눌러 여는 별도 화면에 긴 메모/문서를 씁니다'}
 ];
 
 /* 속성(열) 대화상자 — 추가/편집 공용 */
@@ -614,7 +890,15 @@ function colDialog(opt){
   optWrap.appendChild(hint);
   body.appendChild(optWrap);
 
-  function sync(){optWrap.style.display=(type==='select'||type==='multi')?'':'none'}
+  const asgHint=document.createElement('div');
+  asgHint.className='mhint';
+  asgHint.textContent='선택 항목은 "Project Info → 담당자 / 팀 목록"에서 등록한 이름을 그대로 사용합니다.';
+  body.appendChild(asgHint);
+
+  function sync(){
+    optWrap.style.display=(type==='select'||type==='multi')?'':'none';
+    asgHint.style.display=(type==='assignee')?'':'none';
+  }
   sync();
 
   openDialog({
@@ -638,7 +922,7 @@ function colDialog(opt){
 
 /* ===== 사용자 추가 시트 (+) ===== */
 const COL_TYPES=[['text','텍스트'],['date','날짜'],['number','숫자'],['select','선택'],['multi','다중 선택']];
-const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택'};
+const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭'};
 const CHIP_COLORS=['#e0e7ff|#3730a3','#dcfce7|#166534','#fee2e2|#991b1b','#fef3c7|#92400e',
   '#e0f2fe|#075985','#f3e8ff|#6b21a8','#ffe4e6|#9f1239','#ecfccb|#3f6212'];
 
@@ -747,6 +1031,7 @@ function buildSheet(s){
   renderSheet(s.id);
   const ci=sheetCalItems(s);
   if(ci){const cb=calBoxFor(s.id,s.id);if(cb)renderCalendar(cb,ci,'달력',{kind:'sheet',key:s.id})}
+  layoutNav();
 }
 
 function chipStyle(opts,v){
@@ -769,6 +1054,25 @@ function cellEditor(s,ri,ci){
     el.onchange=()=>commit(el.value.trim());
     return el;
   }
+  if(ty==='doc'){
+    const wrap=document.createElement('div');
+    wrap.className='docwrap';
+    const has=!!val.trim();
+    const btn=document.createElement('button');
+    btn.type='button';btn.className='doclink';
+    btn.textContent=has?'📄 문서 열기':'+ 문서 만들기';
+    btn.title=has?'문서를 열어서 수정합니다':'새 문서를 만듭니다';
+    btn.onclick=()=>openDocEditor(s,ri,ci);
+    wrap.appendChild(btn);
+    if(has){
+      const prev=document.createElement('span');
+      prev.className='docprev';
+      const flat=val.trim().replace(/\s+/g,' ');
+      prev.textContent=flat.slice(0,24)+(flat.length>24?'…':'');
+      wrap.appendChild(prev);
+    }
+    return wrap;
+  }
   if(ty==='select'){
     const sel=document.createElement('select');
     sel.className='cellin';
@@ -783,6 +1087,24 @@ function cellEditor(s,ri,ci){
     sel.value=val;
     if(val)sel.classList.add('statsel');
     sel.style.cssText=val?chipStyle(s.opts[ci]||[],val):'';
+    sel.onchange=()=>{commit(sel.value);renderSheet(s.id)};
+    return sel;
+  }
+  if(ty==='assignee'){
+    const sel=document.createElement('select');
+    sel.className='cellin';
+    const blank=document.createElement('option');blank.value='';blank.textContent='—';
+    sel.appendChild(blank);
+    const list=d.members||[];
+    list.forEach(o=>{
+      const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op);
+    });
+    if(val&&list.indexOf(val)<0){
+      const op=document.createElement('option');op.value=val;op.textContent=val+' (목록에 없음)';sel.appendChild(op);
+    }
+    sel.value=val;
+    if(val)sel.classList.add('statsel');
+    sel.style.cssText=val?chipStyle(list,val):'';
     sel.onchange=()=>{commit(sel.value);renderSheet(s.id)};
     return sel;
   }
@@ -816,6 +1138,26 @@ function cellEditor(s,ri,ci){
   return td;
 }
 
+function arrayMove(arr,from,to){
+  if(from===to)return;
+  const item=arr.splice(from,1)[0];
+  arr.splice(to,0,item);
+}
+
+function reorderSheetCol(id,from,to){
+  const s=getSheet(id);if(!s)return;
+  if(from===to||from<0||to<0||from>=s.cols.length||to>=s.cols.length)return;
+  arrayMove(s.cols,from,to);
+  arrayMove(s.types,from,to);
+  arrayMove(s.opts,from,to);
+  const tail=s.widths.slice(s.cols.length);
+  const w=s.widths.slice(0,s.cols.length);
+  arrayMove(w,from,to);
+  s.widths=w.concat(tail);
+  s.rows.forEach(r=>arrayMove(r,from,to));
+  renderSheet(id);saveAll();update();
+}
+
 function renderSheet(id){
   const s=getSheet(id);if(!s)return;
   normSheet(s);
@@ -823,6 +1165,18 @@ function renderSheet(id){
   const hr=sec.querySelector('thead tr');hr.innerHTML='';
   s.cols.forEach((c,ci)=>{
     const th=document.createElement('th');
+    const grip=document.createElement('span');
+    grip.className='coldrag';grip.draggable=true;grip.textContent='⠿';grip.title='드래그해서 속성 순서 변경';
+    grip.ondragstart=e=>{e.dataTransfer.setData('text/plain',String(ci));e.dataTransfer.effectAllowed='move';th.classList.add('dragging')};
+    grip.ondragend=()=>th.classList.remove('dragging');
+    th.ondragover=e=>{e.preventDefault();th.classList.add('dragover')};
+    th.ondragleave=()=>th.classList.remove('dragover');
+    th.ondrop=e=>{
+      e.preventDefault();th.classList.remove('dragover');
+      const from=parseInt(e.dataTransfer.getData('text/plain'),10);
+      if(!isNaN(from))reorderSheetCol(id,from,ci);
+    };
+    th.appendChild(grip);
     const sp=document.createElement('span');
     sp.className='colname';sp.contentEditable='true';sp.textContent=c;
     sp.onblur=()=>{s.cols[ci]=sp.textContent.trim()||('열'+(ci+1));sp.textContent=s.cols[ci];saveAll();update()};
@@ -880,6 +1234,29 @@ function editCol(id,ci){
       renderSheet(id);saveAll();update();
     }
   });
+}
+
+function openDocEditor(s,ri,ci){
+  const val=s.rows[ri][ci]==null?'':String(s.rows[ri][ci]);
+  const rowLabel=String(s.rows[ri][0]||'').trim()||('행 '+(ri+1));
+  const body=document.createElement('div');
+  const ta=document.createElement('textarea');
+  ta.value=val;
+  ta.placeholder='자유롭게 메모나 문서를 작성하세요.';
+  ta.style.cssText='min-height:320px;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.6;border:1px solid #dde4ec;border-radius:8px;padding:10px;resize:vertical';
+  body.appendChild(ta);
+  openDialog({
+    title:s.cols[ci]||'텍스트탭',
+    sub:'"'+rowLabel+'" 행의 문서',
+    ok:'저장',
+    body:body,
+    onOk:()=>{
+      s.rows[ri][ci]=ta.value;
+      renderSheet(s.id);saveAll();update();
+      return null;
+    }
+  });
+  setTimeout(()=>{try{ta.focus();ta.setSelectionRange(ta.value.length,ta.value.length)}catch(e){}},40);
 }
 
 function addSheetRow(id){
@@ -990,6 +1367,25 @@ function taskStats(){
 /* ===== 기본 시트 열 이름/숨김 ===== */
 const THCACHE={},THHTML={};
 
+function extraCols(type){
+  if(!d.extraCols||typeof d.extraCols!=='object')d.extraCols={};
+  if(!Array.isArray(d.extraCols[type]))d.extraCols[type]=[];
+  return d.extraCols[type];
+}
+
+function ensureExtraTh(type){
+  const list=extraCols(type);
+  const all=THCACHE[type];
+  if(!all||!all.length)return;
+  const builtinN=cfg[type].n;
+  while(all.length-1<builtinN+list.length){
+    const i=all.length-1-builtinN;
+    const th=document.createElement('th');
+    th.dataset.extra='1';
+    all.splice(all.length-1,0,th);
+  }
+}
+
 function thAll(type){
   if(!THCACHE[type]){
     const tr=document.querySelector('#'+type+' thead tr');
@@ -999,6 +1395,7 @@ function thAll(type){
     arr.forEach(th=>{if(th.dataset.orig==null)th.dataset.orig=th.textContent});
     THCACHE[type]=arr;
   }
+  ensureExtraTh(type);
   return THCACHE[type];
 }
 
@@ -1014,6 +1411,10 @@ function lockedCols(type){
 function colLabel(type,ci){
   const m=(d.colname&&d.colname[type])||{};
   if(m[ci]!=null&&String(m[ci]).trim())return m[ci];
+  if(ci>=cfg[type].n){
+    const def=extraCols(type)[ci-cfg[type].n];
+    return def?def.name:'';
+  }
   const all=thAll(type);
   return all[ci]?all[ci].dataset.orig:'';
 }
@@ -1024,10 +1425,31 @@ function hiddenCols(type){
   return d.colhide[type];
 }
 
+function colOrder(type){
+  const total=thAll(type).length-1;
+  if(!d.colorder||typeof d.colorder!=='object')d.colorder={};
+  let ord=d.colorder[type];
+  if(!Array.isArray(ord))ord=[];
+  ord=ord.filter(i=>Number.isInteger(i)&&i>=0&&i<total);
+  for(let i=0;i<total;i++)if(ord.indexOf(i)<0)ord.push(i);
+  d.colorder[type]=ord;
+  return ord;
+}
+
+function reorderCol(type,from,to){
+  if(from===to)return;
+  const order=colOrder(type).slice();
+  const fromPos=order.indexOf(from),toPos=order.indexOf(to);
+  if(fromPos<0||toPos<0)return;
+  order.splice(fromPos,1);
+  order.splice(toPos,0,from);
+  d.colorder[type]=order;
+  render(type);save(true);
+}
+
 function visibleCols(type){
-  const n=thAll(type).length-1,hid=hiddenCols(type),out=[];
-  for(let i=0;i<n;i++)if(hid.indexOf(i)<0)out.push(i);
-  return out;
+  const hid=hiddenCols(type);
+  return colOrder(type).filter(ci=>hid.indexOf(ci)<0);
 }
 
 function rebuildHead(type){
@@ -1039,13 +1461,32 @@ function rebuildHead(type){
   visibleCols(type).forEach(ci=>{
     const th=all[ci];
     th.innerHTML='';
+    th.classList.remove('dragging','dragover');
+    const grip=document.createElement('span');
+    grip.className='coldrag';grip.draggable=true;grip.textContent='⠿';grip.title='드래그해서 열 순서 변경';
+    grip.ondragstart=e=>{e.dataTransfer.setData('text/plain',String(ci));e.dataTransfer.effectAllowed='move';th.classList.add('dragging')};
+    grip.ondragend=()=>th.classList.remove('dragging');
+    th.appendChild(grip);
+    th.ondragover=e=>{e.preventDefault();th.classList.add('dragover')};
+    th.ondragleave=()=>th.classList.remove('dragover');
+    th.ondrop=e=>{
+      e.preventDefault();th.classList.remove('dragover');
+      const from=parseInt(e.dataTransfer.getData('text/plain'),10);
+      if(!isNaN(from))reorderCol(type,from,ci);
+    };
     const sp=document.createElement('span');
     sp.className='colname';sp.textContent=colLabel(type,ci);
     th.appendChild(sp);
+    const isExtra=ci>=cfg[type].n;
     const gear=document.createElement('button');
-    gear.className='colx';gear.textContent='⚙';gear.title='열 이름 변경';
-    gear.onclick=()=>editFixedCol(type,ci);
+    gear.className='colx';gear.textContent='⚙';gear.title=isExtra?'속성 유형 / 선택 항목 편집':'열 이름 변경';
+    gear.onclick=()=>isExtra?editExtraCol(type,ci):editFixedCol(type,ci);
     th.appendChild(gear);
+    if(isExtra){
+      const ty=document.createElement('span');
+      ty.className='coltype';ty.textContent=TYPE_LABEL[(extraCols(type)[ci-cfg[type].n]||{}).type]||'텍스트';
+      th.appendChild(ty);
+    }
     if(lock[ci]){
       const lk=document.createElement('span');
       lk.className='collock';lk.textContent='고정';
@@ -1060,6 +1501,40 @@ function rebuildHead(type){
     tr.appendChild(th);
   });
   tr.appendChild(all[all.length-1]);
+}
+
+function editExtraCol(type,ci){
+  const list=extraCols(type);
+  const def=list[ci-cfg[type].n];
+  if(!def)return;
+  colDialog({
+    title:'속성 편집',
+    sub:'"'+(def.name||'')+'" 열의 이름과 값의 종류를 바꿉니다.',
+    ok:'변경',
+    name:def.name,type:def.type,opts:def.opts,
+    onDone:(nm,ty,optList)=>{
+      def.name=nm;def.type=ty;def.opts=(ty==='select'||ty==='multi')?optList:[];
+      if(d.colname&&d.colname[type])delete d.colname[type][ci];
+      render(type);save(true);
+    }
+  });
+}
+
+function addFixedCol(type){
+  const label=(FIXED_SHEETS.find(f=>f[0]===type)||[])[1]||type;
+  colDialog({
+    title:'속성 추가',
+    sub:'"'+label+'" 시트에 새 열을 추가합니다.',
+    ok:'추가',
+    name:'',type:'text',opts:[],
+    onDone:(nm,ty,optList)=>{
+      const list=extraCols(type);
+      list.push({name:nm,type:ty,opts:(ty==='select'||ty==='multi')?optList:[]});
+      const newLen=cfg[type].n+list.length;
+      (d[type]||[]).forEach(r=>{while(r.length<newLen)r.push('')});
+      render(type);save(true);
+    }
+  });
 }
 
 function editFixedCol(type,ci){
@@ -1100,12 +1575,12 @@ function hideFixedCol(type,ci){
 }
 
 function manageCols(type){
-  const all=thAll(type),lock=lockedCols(type),hid=hiddenCols(type);
+  const all=thAll(type),lock=lockedCols(type),hid=hiddenCols(type),order=colOrder(type);
   const body=document.createElement('div');
   body.appendChild(fieldLabel('표시할 열'));
   const list=document.createElement('div');list.id='colList';
   const boxes=[];
-  for(let i=0;i<all.length-1;i++){
+  order.forEach(i=>{
     const lb=document.createElement('label');
     const cb=document.createElement('input');
     cb.type='checkbox';cb.checked=hid.indexOf(i)<0;
@@ -1117,12 +1592,12 @@ function manageCols(type){
       lb.appendChild(lk);
     }
     list.appendChild(lb);
-    boxes.push(cb);
-  }
+    boxes.push({cb:cb,idx:i});
+  });
   body.appendChild(list);
   const hint=document.createElement('div');
   hint.className='mhint';
-  hint.textContent='체크를 해제하면 표에서 감춰집니다. 입력한 내용은 그대로 보관되며 다시 체크하면 복구됩니다. "고정" 표시가 붙은 열은 달력·간트·Dashboard 계산에 쓰여 숨길 수 없습니다.';
+  hint.textContent='체크를 해제하면 표에서 감춰집니다. 입력한 내용은 그대로 보관되며 다시 체크하면 복구됩니다. "고정" 표시가 붙은 열은 달력·간트·Dashboard 계산에 쓰여 숨길 수 없습니다. 열 순서는 표의 헤더(⠿)를 드래그해서 바꿀 수 있습니다.';
   body.appendChild(hint);
   openDialog({
     title:'열 관리',
@@ -1131,7 +1606,7 @@ function manageCols(type){
     body:body,
     onOk:()=>{
       const next=[];
-      boxes.forEach((cb,i)=>{if(!cb.checked&&!lock[i])next.push(i)});
+      boxes.forEach(o=>{if(!o.cb.checked&&!lock[o.idx])next.push(o.idx)});
       if(next.length>=all.length-1)return '최소 1개의 열은 남겨 주세요.';
       d.colhide[type]=next;
       render(type);save(true);
@@ -1165,13 +1640,18 @@ function fixedCalItems(type){
   const ni=(CAL_NAMECOL[type]!=null)?CAL_NAMECOL[type]:0;
   const sk=c.sel?Object.keys(c.sel):[];
   const si=sk.length?parseInt(sk[sk.length-1],10):-1;
-  return (d[type]||[]).map((r,ri)=>({
-    ri:ri,
-    name:String(r[ni]||r[0]||'').trim()||'(제목 없음)',
-    start:r[dts[0]]||'',
-    end:dts.length>1?(r[dts[1]]||''):'',
-    status:si>=0?String(r[si]||''):''
-  }));
+  const order=(type==='wbs')?wbsOrder():(d[type]||[]).map((r,i)=>({ri:i,depth:0}));
+  return order.map(({ri,depth})=>{
+    const r=d[type][ri];
+    return {
+      ri:ri,
+      name:String(r[ni]||r[0]||'').trim()||'(제목 없음)',
+      start:r[dts[0]]||'',
+      end:dts.length>1?(r[dts[1]]||''):'',
+      status:si>=0?String(r[si]||''):'',
+      depth:depth
+    };
+  });
 }
 
 function sheetCalItems(s){
@@ -1182,7 +1662,8 @@ function sheetCalItems(s){
     name:String(r[m.iN]||'').trim()||'(제목 없음)',
     start:m.iS>=0?String(r[m.iS]||''):'',
     end:m.iE>=0?String(r[m.iE]||''):'',
-    status:m.iSt>=0?String(r[m.iSt]||''):''
+    status:m.iSt>=0?String(r[m.iSt]||''):'',
+    depth:0
   }));
 }
 
@@ -1213,9 +1694,95 @@ function focusRow(src,ri){
 }
 
 const CAL_MAXLANE=3;
+const CAL_HIDDEN={},CAL_LIST_OPEN={};
+const CAL_COLORS=[
+  '#dbeafe|#1d4ed8','#dcfce7|#166534','#fee2e2|#991b1b','#fef3c7|#92400e','#e0e7ff|#3730a3',
+  '#f3e8ff|#6b21a8','#ffe4e6|#9f1239','#ccfbf1|#0f766e','#fae8ff|#86198f','#e2e8f0|#334155'
+];
+
+function calHiddenSet(key){
+  if(!CAL_HIDDEN[key])CAL_HIDDEN[key]=new Set();
+  return CAL_HIDDEN[key];
+}
+
+function toggleCalList(key){
+  CAL_LIST_OPEN[key]=!CAL_LIST_OPEN[key];
+  renderAllCalendars();
+}
+
+function calSetHover(box,ri,on){
+  const sel='[data-ri="'+String(ri).replace(/"/g,'\\"')+'"]';
+  box.querySelectorAll('.cbar'+sel+',.callrow'+sel).forEach(x=>x.classList.toggle('hoverlink',on));
+}
+
+function calColorIdx(key,ri){
+  return (d.calColor&&d.calColor[key]&&d.calColor[key][ri]!=null)?d.calColor[key][ri]:null;
+}
+
+function calColorPair(key,ri,status){
+  const idx=calColorIdx(key,ri);
+  if(idx!=null&&CAL_COLORS[idx])return CAL_COLORS[idx];
+  return STATUS_COLOR[String(status||'').trim()]||null;
+}
+
+function calBarStyle(key,ri,status){
+  const pair=calColorPair(key,ri,status);
+  if(!pair)return null;
+  const p=pair.split('|');
+  return 'background:'+p[0]+';color:'+p[1]+';border-color:'+p[1]+'33';
+}
+
+function swatchColor(key,ri,status){
+  const pair=calColorPair(key,ri,status);
+  return pair?pair.split('|')[0]:'#cbd5e1';
+}
+
+function pickCalColor(key,ri){
+  const body=document.createElement('div');
+  body.appendChild(fieldLabel('색상 선택'));
+  const grid=document.createElement('div');
+  grid.style.cssText='display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:6px';
+  const cur=calColorIdx(key,ri);
+  let chosen=cur;
+  const swatches=[];
+  const mark=()=>swatches.forEach(s=>{s.el.style.borderColor=(s.idx===chosen)?'#0f172a':'transparent'});
+  CAL_COLORS.forEach((c,i)=>{
+    const b=document.createElement('button');
+    b.type='button';b.title='색상 '+(i+1);
+    b.style.cssText='width:100%;aspect-ratio:1;border-radius:8px;border:2px solid transparent;background:'+c.split('|')[0]+';cursor:pointer';
+    b.onclick=()=>{chosen=i;mark()};
+    grid.appendChild(b);
+    swatches.push({idx:i,el:b});
+  });
+  body.appendChild(grid);
+  const hint=document.createElement('div');
+  hint.className='mhint';hint.textContent='색을 지정하지 않으면 상태(예정/진행/완료 등)에 따른 기본 색이 쓰입니다.';
+  body.appendChild(hint);
+  const resetBtn=document.createElement('button');
+  resetBtn.type='button';resetBtn.textContent='기본(상태) 색으로';resetBtn.style.marginTop='10px';
+  resetBtn.onclick=()=>{chosen=null;mark()};
+  body.appendChild(resetBtn);
+  mark();
+  openDialog({
+    title:'일정 색상 지정',
+    sub:'이 일정의 달력 막대 색을 고릅니다.',
+    ok:'적용',
+    body:body,
+    onOk:()=>{
+      if(!d.calColor||typeof d.calColor!=='object')d.calColor={};
+      if(!d.calColor[key]||typeof d.calColor[key]!=='object')d.calColor[key]={};
+      if(chosen==null)delete d.calColor[key][ri];else d.calColor[key][ri]=chosen;
+      saveAll();
+      renderAllCalendars();
+      return null;
+    }
+  });
+}
 
 function renderCalendar(box,items,label,src){
   calInit();
+  const prevListEl=box.querySelector('.callist');
+  const prevListScroll=prevListEl?prevListEl.scrollTop:null;
   const DAY=86400000,y=CAL_Y,m=CAL_M;
   const mStart=Date.UTC(y,m,1),mEnd=Date.UTC(y,m+1,1);
   const days=new Date(y,m+1,0).getDate();
@@ -1225,8 +1792,12 @@ function renderCalendar(box,items,label,src){
   const now=new Date();
   const todayN=Date.UTC(now.getFullYear(),now.getMonth(),now.getDate());
 
-  const segs=[];let hit=0;
-  (items||[]).forEach(it=>{
+  const hidden=calHiddenSet(src.key);
+  const visItems=(items||[]).filter(it=>!hidden.has(it.ri));
+
+  let hit=0;
+  const byItem=new Map();
+  (visItems||[]).forEach(it=>{
     let s=gDay(it.start),e=gDay(it.end);
     if(s==null&&e==null)return;
     if(s==null)s=e;
@@ -1234,28 +1805,36 @@ function renderCalendar(box,items,label,src){
     if(e<s){const tmp=s;s=e;e=tmp}
     if(e>=mStart&&s<mEnd)hit++;
     if(e<gridStart||s>=gridEnd)return;
+    const itSegs=[];
     for(let wk=0;wk<weeks;wk++){
       const ws=gridStart+wk*7*DAY,we=ws+6*DAY;
       if(e<ws||s>we)continue;
       const aa=Math.max(s,ws),bb=Math.min(e,we);
-      segs.push({wk:wk,c0:Math.round((aa-ws)/DAY),c1:Math.round((bb-ws)/DAY),
-        it:it,openL:s<ws,openR:e>we,days:Math.round((e-s)/DAY)+1});
+      itSegs.push({wk:wk,c0:Math.round((aa-ws)/DAY),c1:Math.round((bb-ws)/DAY),
+        openL:s<ws,openR:e>we,days:Math.round((e-s)/DAY)+1});
     }
+    if(itSegs.length)byItem.set(it,itSegs);
   });
-  segs.sort((p,q)=>(p.wk-q.wk)||(p.c0-q.c0)||((q.c1-q.c0)-(p.c1-p.c0)));
-  const lanes={};
-  segs.forEach(sg=>{
-    const L=lanes[sg.wk]=lanes[sg.wk]||[];
-    let put=-1;
-    for(let i=0;i<L.length&&put<0;i++){
-      let free=true;
-      for(let j=0;j<L[i].length;j++){
-        if(!(sg.c1<L[i][j][0]||sg.c0>L[i][j][1])){free=false;break}
-      }
-      if(free){L[i].push([sg.c0,sg.c1]);put=i}
+  // give each item ONE lane, kept the same across every week it spans, so a
+  // multi-week bar lines up vertically week-to-week instead of jumping rows
+  const itemList=Array.from(byItem.keys()).sort((a,b)=>{
+    const sa=byItem.get(a)[0],sb=byItem.get(b)[0];
+    return (sa.wk-sb.wk)||(sa.c0-sb.c0)||((sb.c1-sb.c0)-(sa.c1-sa.c0));
+  });
+  const laneOcc=[],segs=[];
+  itemList.forEach(it=>{
+    const itSegs=byItem.get(it);
+    let lane=-1;
+    for(let i=0;i<laneOcc.length&&lane<0;i++){
+      const occ=laneOcc[i];
+      const conflict=itSegs.some(sg=>occ.some(o=>o.wk===sg.wk&&!(sg.c1<o.c0||sg.c0>o.c1)));
+      if(!conflict)lane=i;
     }
-    if(put<0){L.push([[sg.c0,sg.c1]]);put=L.length-1}
-    sg.lane=put;
+    if(lane<0){laneOcc.push([]);lane=laneOcc.length-1}
+    itSegs.forEach(sg=>{
+      laneOcc[lane].push({wk:sg.wk,c0:sg.c0,c1:sg.c1});
+      segs.push(Object.assign({it:it,lane:lane},sg));
+    });
   });
 
   box.innerHTML='';
@@ -1265,10 +1844,54 @@ function renderCalendar(box,items,label,src){
   const mm=document.createElement('span');mm.className='calm';mm.textContent=y+'년 '+(m+1)+'월';head.appendChild(mm);
   const next=document.createElement('button');next.textContent='▶';next.onclick=()=>calShift(1);head.appendChild(next);
   const tdb=document.createElement('button');tdb.textContent='이번 달';tdb.onclick=calToday;head.appendChild(tdb);
+  const listBtn=document.createElement('button');
+  listBtn.textContent='일정 목록'+(hidden.size?' (숨김 '+hidden.size+')':'');
+  listBtn.title='표시할 일정을 고르거나, 마우스를 올려 달력에서 강조합니다';
+  listBtn.onclick=()=>toggleCalList(src.key);
+  head.appendChild(listBtn);
   const cnt=document.createElement('span');cnt.className='calcnt';
-  cnt.textContent='이 달 일정 '+hit+'건 · 막대를 누르면 표에서 해당 행을 찾아줍니다';
+  cnt.textContent='이 달 일정 '+hit+'건 · 마우스를 올리면 강조되고, 누르면 표에서 해당 행을 찾아줍니다';
   head.appendChild(cnt);
   box.appendChild(head);
+
+  if(CAL_LIST_OPEN[src.key]){
+    const list=document.createElement('div');list.className='callist';
+    if(!items||!items.length){
+      const em=document.createElement('div');em.className='calempty';em.textContent='표시할 일정이 없습니다.';
+      list.appendChild(em);
+    }
+    (items||[]).forEach(it=>{
+      const row=document.createElement('div');row.className='callrow';
+      row.dataset.ri=String(it.ri);
+      row.onclick=()=>focusRow(src,it.ri);
+      row.onmouseenter=()=>calSetHover(box,it.ri,true);
+      row.onmouseleave=()=>calSetHover(box,it.ri,false);
+      const cb=document.createElement('input');cb.type='checkbox';
+      cb.checked=!hidden.has(it.ri);
+      cb.onclick=e=>e.stopPropagation();
+      cb.onchange=()=>{
+        if(cb.checked)hidden.delete(it.ri);else hidden.add(it.ri);
+        renderAllCalendars();
+      };
+      row.appendChild(cb);
+      const dep=Math.min(it.depth||0,4);
+      if(dep>0)row.style.paddingLeft=(dep*18)+'px';
+      const sw=document.createElement('span');sw.className='swatch';sw.style.background=swatchColor(src.key,it.ri,it.status);
+      sw.style.cursor='pointer';
+      sw.title='클릭해서 이 일정의 색상 지정';
+      sw.onclick=e=>{e.stopPropagation();pickCalColor(src.key,it.ri)};
+      row.appendChild(sw);
+      const nm=document.createElement('span');nm.className='calname';nm.textContent=(dep>0?'↳ ':'')+it.name;
+      if(dep>0)nm.style.color='#64748b';
+      row.appendChild(nm);
+      const meta=document.createElement('span');meta.className='calid';
+      meta.textContent=(it.start||'-')+(it.end&&it.end!==it.start?(' ~ '+it.end):'')+(it.status?(' · '+it.status):'');
+      row.appendChild(meta);
+      list.appendChild(row);
+    });
+    box.appendChild(list);
+    if(prevListScroll!=null)list.scrollTop=prevListScroll;
+  }
 
   const grid=document.createElement('div');grid.className='calgrid';
   const dr=document.createElement('div');dr.className='caldowrow';
@@ -1310,14 +1933,17 @@ function renderCalendar(box,items,label,src){
       }
       const bar=document.createElement('div');
       bar.className='cbar'+(sg.openL?' ol':'')+(sg.openR?' or':'');
+      bar.dataset.ri=String(sg.it.ri);
       bar.style.gridColumn=(sg.c0+1)+' / span '+(sg.c1-sg.c0+1);
       bar.style.gridRow=sg.lane+2;
-      const st=statusStyle(sg.it.status);
+      const st=calBarStyle(src.key,sg.it.ri,sg.it.status);
       if(st)bar.style.cssText=bar.style.cssText+';'+st;
-      bar.textContent=(sg.openL?'‹ ':'')+sg.it.name;
+      bar.textContent=(sg.openL?'‹ ':'')+sg.it.name+(sg.openR?' ›':'');
       bar.title=sg.it.name+(sg.it.status?' · '+sg.it.status:'')
         +'\n'+(sg.it.start||'-')+(sg.it.end&&sg.it.end!==sg.it.start?(' ~ '+sg.it.end+' ('+sg.days+'일)'):'')
-        +'\n\n클릭하면 표에서 해당 행을 표시합니다.';
+        +'\n\n마우스를 올리면 강조되고, 클릭하면 표에서 해당 행을 표시합니다.';
+      bar.onmouseenter=()=>calSetHover(box,sg.it.ri,true);
+      bar.onmouseleave=()=>calSetHover(box,sg.it.ri,false);
       bar.onclick=()=>focusRow(src,sg.it.ri);
       fg.appendChild(bar);
     });
@@ -1336,6 +1962,7 @@ function renderCalendar(box,items,label,src){
 }
 
 function renderAllCalendars(){
+  const scrollX=window.scrollX,scrollY=window.scrollY;
   Object.keys(cfg).forEach(type=>{
     const items=fixedCalItems(type);
     if(!items)return;
@@ -1349,6 +1976,7 @@ function renderAllCalendars(){
     const box=calBoxFor(s.id,s.id);
     if(box)renderCalendar(box,items,'달력',{kind:'sheet',key:s.id});
   });
+  window.scrollTo(scrollX,scrollY);
 }
 
 /* ===== WBS 간트 차트 ===== */
@@ -1920,6 +2548,59 @@ const FIXED_SHEETS=[['wbs','WBS'],['docs','문서 List'],['issue','Issue List'],
 
 function isHidden(k){return Array.isArray(d.hidden)&&d.hidden.indexOf(k)>=0}
 
+function sheetOrder(){
+  const valid=new Set(FIXED_SHEETS.map(f=>f[0]).concat((d.custom||[]).map(s=>s.id)));
+  if(!Array.isArray(d.sheetOrder))d.sheetOrder=[];
+  const ord=d.sheetOrder.filter(k=>valid.has(k));
+  const seen=new Set(ord);
+  FIXED_SHEETS.forEach(f=>{if(!seen.has(f[0])){ord.push(f[0]);seen.add(f[0])}});
+  (d.custom||[]).forEach(s=>{if(!seen.has(s.id)){ord.push(s.id);seen.add(s.id)}});
+  d.sheetOrder=ord;
+  return ord;
+}
+
+function reorderSheetNav(fromKey,toKey){
+  if(fromKey===toKey)return;
+  const ord=sheetOrder().slice();
+  const fromPos=ord.indexOf(fromKey),toPos=ord.indexOf(toKey);
+  if(fromPos<0||toPos<0)return;
+  ord.splice(fromPos,1);
+  ord.splice(toPos,0,fromKey);
+  d.sheetOrder=ord;
+  saveAll();
+  layoutNav();
+}
+
+function wireNavDrag(){
+  document.querySelectorAll('nav button[data-fixed],nav button[data-sheet]').forEach(b=>{
+    b.draggable=true;
+    b.title='드래그해서 순서 변경';
+    b.ondragstart=e=>{
+      const key=b.dataset.fixed||b.dataset.sheet;
+      e.dataTransfer.setData('text/plain',key);e.dataTransfer.effectAllowed='move';b.classList.add('dragging');
+    };
+    b.ondragend=()=>b.classList.remove('dragging');
+    b.ondragover=e=>{e.preventDefault();b.classList.add('dragover')};
+    b.ondragleave=()=>b.classList.remove('dragover');
+    b.ondrop=e=>{
+      e.preventDefault();b.classList.remove('dragover');
+      const fromKey=e.dataTransfer.getData('text/plain');
+      const toKey=b.dataset.fixed||b.dataset.sheet;
+      reorderSheetNav(fromKey,toKey);
+    };
+  });
+}
+
+function layoutNav(){
+  wireNavDrag();
+  const nav=document.querySelector('nav'),plus=document.getElementById('addSheetBtn');
+  if(!nav||!plus)return;
+  sheetOrder().forEach(key=>{
+    const btn=nav.querySelector('button[data-fixed="'+key+'"]')||nav.querySelector('button[data-sheet="'+key+'"]');
+    if(btn)nav.insertBefore(btn,plus);
+  });
+}
+
 function applySheetVisibility(){
   FIXED_SHEETS.forEach(f=>{
     const k=f[0],off=isHidden(k);
@@ -1989,6 +2670,11 @@ function normalizeData(){
   if(!d.colw||typeof d.colw!=='object')d.colw={};
   if(!d.colname||typeof d.colname!=='object')d.colname={};
   if(!d.colhide||typeof d.colhide!=='object')d.colhide={};
+  if(!d.colorder||typeof d.colorder!=='object')d.colorder={};
+  if(!Array.isArray(d.members))d.members=[];
+  if(!Array.isArray(d.sheetOrder))d.sheetOrder=[];
+  if(!d.calColor||typeof d.calColor!=='object')d.calColor={};
+  if(!d.extraCols||typeof d.extraCols!=='object')d.extraCols={};
 }
 
 function fillInfo(){
@@ -1999,8 +2685,64 @@ function fillInfo(){
   });
 }
 
+function refreshAssigneeColumns(){
+  (d.custom||[]).forEach(s=>{if((s.types||[]).indexOf('assignee')>=0)renderSheet(s.id)});
+  Object.keys(cfg).forEach(t=>{if(cfg[t].asg&&cfg[t].asg.length)render(t)});
+}
+
+function renderMemberList(){
+  const box=document.getElementById('memberList');
+  if(!box)return;
+  const list=d.members||[];
+  if(!list.length){box.innerHTML='<span class="memberempty">아직 등록된 담당자가 없습니다.</span>';return}
+  box.innerHTML='';
+  list.forEach((m,i)=>{
+    const chip=document.createElement('span');
+    chip.className='memberchip';
+    const t=document.createElement('span');t.textContent=m;chip.appendChild(t);
+    const x=document.createElement('b');x.textContent='×';x.title='"'+m+'" 삭제';
+    x.onclick=()=>removeMember(i);
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+}
+
+function addMember(){
+  const el=document.getElementById('memberInput');
+  if(!el)return;
+  const nm=el.value.trim();
+  if(!nm)return;
+  if(!Array.isArray(d.members))d.members=[];
+  if(d.members.indexOf(nm)>=0){alert('이미 등록된 이름입니다.');el.value='';el.focus();return}
+  d.members.push(nm);
+  el.value='';
+  saveAll();
+  renderMemberList();
+  refreshAssigneeColumns();
+  el.focus();
+}
+
+function removeMember(i){
+  const nm=d.members[i];
+  if(!confirm('"'+nm+'"을(를) 담당자 목록에서 삭제할까요?\n이미 선택된 셀의 값은 그대로 남아있습니다.'))return;
+  d.members.splice(i,1);
+  saveAll();
+  renderMemberList();
+  refreshAssigneeColumns();
+}
+
 let SHOW_DONE=false;
 function pStatus(p){return (p&&p.status)||'진행'}
+
+function reorderProject(fromKey,toKey){
+  if(fromKey===toKey)return;
+  const from=PROJECTS.findIndex(p=>p.key===fromKey),to=PROJECTS.findIndex(p=>p.key===toKey);
+  if(from<0||to<0)return;
+  const item=PROJECTS.splice(from,1)[0];
+  PROJECTS.splice(to,0,item);
+  saveProjects();
+  renderProjectBar();
+}
 
 function renderProjectBar(){
   const bar=document.getElementById('projBar');
@@ -2016,6 +2758,17 @@ function renderProjectBar(){
     b.textContent=(isDone?'✓ ':'')+p.tab+(pStatus(p)==='보류'?' · 보류':'');
     b.className=(p.key===KEY?'on':'')+(isDone?' pdone':'');
     b.onclick=()=>switchProject(p.key);
+    b.draggable=true;
+    b.title='드래그해서 순서 변경';
+    b.ondragstart=e=>{e.dataTransfer.setData('text/plain',p.key);e.dataTransfer.effectAllowed='move';b.classList.add('dragging')};
+    b.ondragend=()=>b.classList.remove('dragging');
+    b.ondragover=e=>{e.preventDefault();b.classList.add('dragover')};
+    b.ondragleave=()=>b.classList.remove('dragover');
+    b.ondrop=e=>{
+      e.preventDefault();b.classList.remove('dragover');
+      const fromKey=e.dataTransfer.getData('text/plain');
+      reorderProject(fromKey,p.key);
+    };
     return b;
   };
 
@@ -2169,9 +2922,11 @@ function applyProject(){
   renderProjectBar();
   fillProjectMeta();
   fillInfo();
+  renderMemberList();
   Object.keys(cfg).forEach(render);
   clearCustomSheets();
   initCustomSheets();
+  layoutNav();
   applySheetVisibility();
   renderSheetToggles();
   update();
