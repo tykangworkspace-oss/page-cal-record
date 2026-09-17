@@ -182,6 +182,8 @@ body.resizing{cursor:col-resize;user-select:none}
 .cwfg{position:relative;display:grid;grid-template-columns:repeat(7,1fr);gap:3px 2px;padding:5px 4px 7px;align-content:start}
 .cwnum{font-size:11px;font-weight:800;color:#475569;padding:0 3px;line-height:1.5}
 .cwnum.sun{color:#dc2626}.cwnum.sat{color:#2563eb}
+.cwnum.holiday b{color:#dc2626}
+.holname{display:block;font-size:9px;font-weight:700;color:#dc2626;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .cwnum.out{color:#cbd5e1}
 .cwnum.today b{background:#2563eb;color:#fff;border-radius:999px;padding:1px 7px;font-weight:800}
 .cbar{font-size:10px;font-weight:700;padding:2px 7px;border-radius:5px;background:#e0e7ff;color:#3730a3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border:1px solid transparent;min-width:0}
@@ -229,7 +231,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}.infolong{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="showAllSchedule()" title="모든 프로젝트의 WBS 일정을 한 달력에 모아서 크게 봅니다">전체 일정 보기</button><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button onclick="ghDialog()" title="비공개 GitHub 저장소에 데이터를 저장하고 다른 PC에서 불러옵니다">GitHub 동기화</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
+<header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="showAllSchedule()" title="모든 프로젝트의 WBS 일정을 한 달력에 모아서 크게 봅니다">전체 일정 보기</button><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button onclick="holidayDialog()" title="공휴일 .ics 주소를 등록해 모든 달력에 표시합니다">공휴일 표시</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button onclick="ghDialog()" title="비공개 GitHub 저장소에 데이터를 저장하고 다른 PC에서 불러옵니다">GitHub 동기화</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
 <nav><button class="on" onclick="tab('dashboard',this)">Dashboard</button><button class="" onclick="tab('info',this)">Project Info</button><button class="" data-fixed="wbs" onclick="tab('wbs',this)">WBS</button><button class="" data-fixed="docs" onclick="tab('docs',this)">문서 List</button><button class="" data-fixed="issue" onclick="tab('issue',this)">Issue List</button><button class="" data-fixed="change" onclick="tab('change',this)">변경 이력</button><button class="" data-fixed="test" onclick="tab('test',this)">시험 계획/결과</button><button class="" data-fixed="release" onclick="tab('release',this)">Release Check</button><button id="addSheetBtn" class="addsheet" title="시트 추가" onclick="addSheet()">+</button></nav>
 <main><section id="dashboard" class="page on"><div class="actions"><h2>Dashboard</h2></div>
 <div class="cards"><div class="card"><div class="muted" id="cardLabel1">WBS 진행률</div><div class="metric" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div><div class="card"><div class="muted">완료 업무</div><div class="metric" id="done">0</div></div><div class="card"><div class="muted" id="cardLabel3">오픈 Issue</div><div class="metric" id="open">0</div></div><div class="card"><div class="muted">Release Check</div><div class="metric" id="rel">0%</div><div class="bar"><i id="relbar"></i></div></div></div><div class="box" style="margin-top:12px"><h3 style="margin:0 0 10px">기본정보</h3><div id="dashInfoGrid"></div></div><div class="box" style="margin-top:12px"><div class="gbar-actions"><h3 style="margin:0 8px 0 0">간트 차트</h3>
@@ -1845,6 +1847,128 @@ function pickCalColor(key,ri){
   });
 }
 
+/* ===== 공휴일(.ics) 표시 ===== */
+const HOLIDAY_KEY='pm_holidays_v1';
+let HOLIDAYS={};
+
+function loadHolidays(){
+  try{
+    const raw=localStorage.getItem(HOLIDAY_KEY);
+    if(raw){const p=JSON.parse(raw);HOLIDAYS=(p&&p.items)||{}}
+  }catch(e){}
+}
+
+function ymdKeyUTC(ms){
+  const dt=new Date(ms);
+  return ''+dt.getUTCFullYear()+String(dt.getUTCMonth()+1).padStart(2,'0')+String(dt.getUTCDate()).padStart(2,'0');
+}
+
+function parseIcsHolidays(text){
+  const map={};
+  String(text||'').split('BEGIN:VEVENT').slice(1).forEach(b=>{
+    const dm=b.match(/DTSTART[^:\n]*:(\d{8})/);
+    if(!dm)return;
+    const sm=b.match(/SUMMARY:([^\r\n]*)/);
+    let name=sm?sm[1]:'';
+    name=name.replace(/\\n/gi,' ').replace(/\\,/g,',').replace(/\\;/g,';').replace(/\\\\/g,'\\').trim();
+    map[dm[1]]=name||'공휴일';
+  });
+  return map;
+}
+
+async function fetchHolidaysFromUrl(url){
+  const res=await fetch(url,{cache:'no-store'});
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return await res.text();
+}
+
+function saveHolidays(map,url){
+  const payload={url:url||'',items:map,updatedAt:new Date().toISOString()};
+  try{localStorage.setItem(HOLIDAY_KEY,JSON.stringify(payload))}catch(e){}
+  HOLIDAYS=map;
+  renderAllCalendars();
+}
+
+function holidayDialog(){
+  let cur=null;
+  try{cur=JSON.parse(localStorage.getItem(HOLIDAY_KEY))}catch(e){}
+  const body=document.createElement('div');
+  body.appendChild(fieldLabel('휴일 .ics 주소'));
+  const urlInp=textField((cur&&cur.url)||'https://holidays.hyunbin.page/basic.ics','https://.../xxx.ics');
+  body.appendChild(urlInp);
+
+  const msg=document.createElement('div');msg.className='ghmsg';
+  const say=(cls,txt)=>{msg.className='ghmsg on '+cls;msg.textContent=txt};
+
+  const row=document.createElement('div');row.className='ghrow';
+  const fetchBtn=document.createElement('button');
+  fetchBtn.textContent='주소에서 가져오기';
+  fetchBtn.onclick=async()=>{
+    const u=urlInp.value.trim();
+    if(!u){say('ng','주소를 입력해 주세요.');return}
+    say('info','가져오는 중…');
+    try{
+      const text=await fetchHolidaysFromUrl(u);
+      const map=parseIcsHolidays(text);
+      const n=Object.keys(map).length;
+      if(!n){say('ng','휴일 정보를 찾지 못했습니다. 주소나 파일 형식을 확인해 주세요.');return}
+      saveHolidays(map,u);
+      say('ok','휴일 '+n+'개를 가져왔습니다. 모든 달력에 바로 반영됩니다.');
+    }catch(e){
+      say('ng','자동으로 가져오지 못했습니다 (브라우저 보안 정책 때문일 수 있어요). 아래에 .ics 파일 내용을 직접 붙여넣어 주세요.');
+    }
+  };
+  row.appendChild(fetchBtn);
+  body.appendChild(row);
+  body.appendChild(msg);
+
+  body.appendChild(fieldLabel('또는 .ics 파일 내용 붙여넣기'));
+  const ta=document.createElement('textarea');
+  ta.placeholder='주소에서 자동으로 못 가져올 때, 브라우저로 그 주소를 열어 저장한 .ics 파일 내용을 통째로 붙여넣으세요.';
+  ta.style.cssText='min-height:140px;width:100%;box-sizing:border-box;font-family:monospace;font-size:12px;border:1px solid #dde4ec;border-radius:8px;padding:8px';
+  body.appendChild(ta);
+  const pasteBtn=document.createElement('button');
+  pasteBtn.type='button';pasteBtn.textContent='붙여넣은 내용으로 가져오기';pasteBtn.style.marginTop='8px';
+  pasteBtn.onclick=()=>{
+    const text=ta.value;
+    if(!text.trim()){say('ng','붙여넣을 내용이 없습니다.');return}
+    const map=parseIcsHolidays(text);
+    const n=Object.keys(map).length;
+    if(!n){say('ng','휴일 정보를 찾지 못했습니다.');return}
+    saveHolidays(map,urlInp.value.trim());
+    say('ok','휴일 '+n+'개를 가져왔습니다. 모든 달력에 바로 반영됩니다.');
+  };
+  body.appendChild(pasteBtn);
+
+  const hint=document.createElement('div');
+  hint.className='mhint';
+  hint.textContent=(cur&&cur.updatedAt)
+    ?('마지막으로 가져온 시각: '+new Date(cur.updatedAt).toLocaleString()+' · 휴일 '+Object.keys(cur.items||{}).length+'개 · 모든 프로젝트에 공통으로 적용됩니다.')
+    :'아직 가져온 휴일이 없습니다. 모든 프로젝트의 달력에 공통으로 적용됩니다.';
+  body.appendChild(hint);
+
+  if(cur&&Object.keys(cur.items||{}).length){
+    const clearBtn=document.createElement('button');
+    clearBtn.type='button';clearBtn.textContent='휴일 표시 지우기';clearBtn.style.marginTop='8px';
+    clearBtn.onclick=()=>{
+      if(!confirm('저장된 휴일 정보를 지울까요?'))return;
+      try{localStorage.removeItem(HOLIDAY_KEY)}catch(e){}
+      HOLIDAYS={};
+      renderAllCalendars();
+      closeDialog();
+    };
+    body.appendChild(clearBtn);
+  }
+
+  openDialog({
+    title:'공휴일 달력에 표시',
+    sub:'.ics 휴일 캘린더 주소를 등록하면 모든 프로젝트의 달력에 공통으로 표시됩니다.',
+    ok:'닫기',
+    body:body,
+    onOk:()=>null
+  });
+}
+
 function renderCalendar(box,items,label,src,viewOpts){
   viewOpts=viewOpts||{};
   const ML=viewOpts.maxLane||CAL_MAXLANE;
@@ -2009,13 +2133,19 @@ function renderCalendar(box,items,label,src,viewOpts){
     for(let i=0;i<7;i++){
       const cd=gridStart+(wk*7+i)*DAY;
       const inM=(cd>=mStart&&cd<mEnd);
+      const hname=HOLIDAYS[ymdKeyUTC(cd)];
       const n=document.createElement('div');
-      n.className='cwnum'+(i===0?' sun':(i===6?' sat':''))+(inM?'':' out')+(cd===todayN?' today':'');
+      n.className='cwnum'+(i===0?' sun':(i===6?' sat':''))+(inM?'':' out')+(cd===todayN?' today':'')+(hname?' holiday':'');
       n.style.gridColumn=(i+1);n.style.gridRow=1;
       const bnum=document.createElement('b');
       bnum.style.fontWeight='800';
       bnum.textContent=new Date(cd).getUTCDate();
       n.appendChild(bnum);
+      if(hname){
+        const hl=document.createElement('span');
+        hl.className='holname';hl.textContent=hname;hl.title=hname;
+        n.appendChild(hl);
+      }
       fg.appendChild(n);
     }
     const over={};
@@ -3087,6 +3217,7 @@ function switchProject(key){
   window.scrollTo(0,0);
 }
 
+loadHolidays();
 document.querySelectorAll('[data-k]').forEach(e=>e.onchange=()=>save(true));applyProject();
 if(ghCfg())setTimeout(()=>{ghPull(true)},500);
 </script></body></html>
