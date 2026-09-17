@@ -1511,8 +1511,14 @@ function rebuildHead(type){
       th.appendChild(lk);
     }else{
       const x=document.createElement('button');
-      x.className='colx';x.textContent='×';x.title='이 열 숨기기 (내용은 보관됩니다)';
-      x.onclick=()=>hideFixedCol(type,ci);
+      x.className='colx';x.textContent='×';
+      if(isExtra){
+        x.title='이 속성을 삭제합니다 (입력한 내용도 함께 사라집니다)';
+        x.onclick=()=>deleteExtraCol(type,ci);
+      }else{
+        x.title='이 열 숨기기 (내용은 보관됩니다)';
+        x.onclick=()=>hideFixedCol(type,ci);
+      }
       th.appendChild(x);
     }
     tr.appendChild(th);
@@ -1552,6 +1558,38 @@ function addFixedCol(type){
       render(type);save(true);
     }
   });
+}
+
+function reindexAfterDelete(arr,ci){
+  return arr.filter(i=>i!==ci).map(i=>i>ci?i-1:i);
+}
+
+function deleteExtraCol(type,ci){
+  const builtinN=cfg[type].n;
+  if(ci<builtinN)return;
+  const list=extraCols(type);
+  const idx=ci-builtinN;
+  const def=list[idx];
+  if(!def)return;
+  if(!confirm('"'+(def.name||'')+'" 속성을 삭제할까요?\n입력한 내용도 함께 사라지며 되돌릴 수 없습니다.'))return;
+
+  (d[type]||[]).forEach(r=>{if(r.length>ci)r.splice(ci,1)});
+  list.splice(idx,1);
+
+  if(d.colname&&d.colname[type]){
+    const next={};
+    Object.keys(d.colname[type]).forEach(k=>{
+      const n=parseInt(k,10);
+      if(n===ci)return;
+      next[n>ci?n-1:n]=d.colname[type][k];
+    });
+    d.colname[type]=next;
+  }
+  if(d.colhide&&Array.isArray(d.colhide[type]))d.colhide[type]=reindexAfterDelete(d.colhide[type],ci);
+  if(d.colorder&&Array.isArray(d.colorder[type]))d.colorder[type]=reindexAfterDelete(d.colorder[type],ci);
+  if(THCACHE[type])THCACHE[type].splice(ci,1);
+
+  render(type);save(true);
 }
 
 function editFixedCol(type,ci){
@@ -2122,9 +2160,12 @@ function renderGantt(){
 
   const items=[];
   if(!isHidden('wbs')){
-    (d.wbs||[]).forEach(r=>items.push({
-      name:r[2]||r[0]||'',start:r[4],end:r[5],status:r[6]||'예정',
-      pct:parseInt(r[7],10)||0,src:''}));
+    const topRi=new Set(wbsOrder().filter(o=>o.depth===0).map(o=>o.ri));
+    (d.wbs||[]).forEach((r,ri)=>{
+      if(!topRi.has(ri))return;
+      items.push({name:r[2]||r[0]||'',start:r[4],end:r[5],status:r[6]||'예정',
+        pct:parseInt(r[7],10)||0,src:''});
+    });
   }
   taskRows().forEach(x=>items.push({
     name:x.name,start:x.start,end:x.end,
