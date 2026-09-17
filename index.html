@@ -36,6 +36,7 @@ th .colx:hover{color:#dc2626}
 .callist{max-height:240px;overflow:auto;border:1px solid #eef2f6;border-radius:8px;margin:0 0 10px;padding:2px 10px}
 .calempty{padding:10px 2px;color:#94a3b8;font-size:12px}
 .cbar.hoverlink{outline:2px solid #2563eb99;outline-offset:1px;z-index:2}
+.cbar.cbar-child{opacity:.88;border-style:dashed}
 .help{font-size:12px;background:#f8fafc;border:1px solid #e5eaf1;border-radius:8px;padding:10px;margin-top:10px}
 .help summary{cursor:pointer;font-weight:700;color:#1d4ed8}.help ol{margin:8px 0 0 18px;padding:0;line-height:1.7}
 .openrow{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
@@ -189,6 +190,11 @@ body.resizing{cursor:col-resize;user-select:none}
 .cbar.or{border-top-right-radius:0;border-bottom-right-radius:0;padding-right:4px}
 .cmore{font-size:10px;color:#94a3b8;padding:0 4px;cursor:default}
 tr.rowhi td{background:#fef9c3!important;box-shadow:inset 0 0 0 1px #facc15}
+tr.wbs-group-start td{border-top:2px solid #dde4ec}
+td.wbs-id-parent,td.wbs-id-child{padding-left:38px!important;position:relative}
+td.wbs-id-parent::before,td.wbs-id-child::before{position:absolute;left:4px;top:7px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap;pointer-events:none;line-height:1.4}
+td.wbs-id-parent::before{content:'상위';background:#dbeafe;color:#1d4ed8}
+td.wbs-id-child::before{content:'하위';background:#e2e8f0;color:#475569}
 th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;font-weight:700}
 #colList{display:flex;flex-direction:column;gap:2px;margin-top:4px}
 #colList label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#334155;margin:0;padding:5px 2px;border-bottom:1px solid #f1f5f9}
@@ -492,11 +498,12 @@ function render(type){
   const c=cfg[type],box=document.getElementById(c.el),vis=visibleCols(type);
   box.innerHTML='';
   const order=(type==='wbs')?wbsOrder():(d[type]||[]).map((r,i)=>({ri:i,depth:0}));
-  order.forEach(({ri,depth})=>{
+  order.forEach(({ri,depth},idx)=>{
     const r=d[type][ri];
     const tr=document.createElement('tr');
     tr.dataset.ri=String(ri);
     if(depth>0)tr.style.background='#fafbfc';
+    if(type==='wbs'&&depth===0&&idx>0)tr.classList.add('wbs-group-start');
     vis.forEach(ci=>{
       const v=r[ci],td=document.createElement('td');
       if(ci>=c.n){
@@ -565,10 +572,15 @@ function render(type){
         td.onblur=()=>{d[type][ri][ci]=td.textContent.trim();save(true)};
       }
       if(type==='wbs'&&ci===2){
-        const dep=Math.min(depth,4);
-        td.style.paddingLeft=(10+dep*20)+'px';
-        if(dep>0){td.style.borderLeft='3px solid #cbd5e1';td.style.color='#64748b'}
-        else if(wbsHasChildren(ri)){td.style.fontWeight='800'}
+        if(depth>0){
+          td.style.color='#64748b';
+        }else if(wbsHasChildren(ri)){
+          td.style.fontWeight='800';
+        }
+      }
+      if(type==='wbs'&&ci===0){
+        if(depth>0)td.classList.add('wbs-id-child');
+        else if(wbsHasChildren(ri))td.classList.add('wbs-id-parent');
       }
       tr.appendChild(td);
     });
@@ -1834,24 +1846,49 @@ function renderCalendar(box,items,label,src,viewOpts){
     if(itSegs.length)byItem.set(it,itSegs);
   });
   // give each item ONE lane, kept the same across every week it spans, so a
-  // multi-week bar lines up vertically week-to-week instead of jumping rows
-  const itemList=Array.from(byItem.keys()).sort((a,b)=>{
-    const sa=byItem.get(a)[0],sb=byItem.get(b)[0];
-    return (sa.wk-sb.wk)||(sa.c0-sb.c0)||((sb.c1-sb.c0)-(sa.c1-sa.c0));
+  // multi-week bar lines up vertically week-to-week instead of jumping rows.
+  // Items keep the WBS 상위/하위 order they arrived in (parent immediately
+  // followed by its descendants) — group each top-level item with its whole
+  // subtree, then sort only those top-level bundles by date, so a family
+  // stays together instead of scattering across the month.
+  const withSegs=Array.from(byItem.keys());
+  const groups=[];
+  withSegs.forEach(it=>{
+    const dep=it.depth||0;
+    if(dep===0||!groups.length)groups.push({members:[]});
+    groups[groups.length-1].members.push(it);
   });
+  groups.forEach(g=>{
+    const first=byItem.get(g.members[0])[0];
+    g.sortKey=[first.wk,first.c0,-(first.c1-first.c0)];
+  });
+  groups.sort((a,b)=>(a.sortKey[0]-b.sortKey[0])||(a.sortKey[1]-b.sortKey[1])||(a.sortKey[2]-b.sortKey[2]));
+
   const laneOcc=[],segs=[];
-  itemList.forEach(it=>{
+  const tryLane=(i,itSegs)=>{
+    const occ=laneOcc[i]||(laneOcc[i]=[]);
+    return !itSegs.some(sg=>occ.some(o=>o.wk===sg.wk&&!(sg.c1<o.c0||sg.c0>o.c1)));
+  };
+  groups.forEach(g=>{
+    const lastLaneAtDepth=[];
+    g.members.forEach(it=>{
     const itSegs=byItem.get(it);
+    const dep=it.depth||0;
+    const preferred=dep>0?lastLaneAtDepth[dep-1]:null;
     let lane=-1;
-    for(let i=0;i<laneOcc.length&&lane<0;i++){
-      const occ=laneOcc[i];
-      const conflict=itSegs.some(sg=>occ.some(o=>o.wk===sg.wk&&!(sg.c1<o.c0||sg.c0>o.c1)));
-      if(!conflict)lane=i;
+    if(preferred!=null&&tryLane(preferred,itSegs))lane=preferred;
+    if(lane<0){
+      const start=preferred!=null?preferred:0;
+      for(let i=start;i<laneOcc.length&&lane<0;i++)if(tryLane(i,itSegs))lane=i;
+      for(let i=0;i<start&&lane<0;i++)if(tryLane(i,itSegs))lane=i;
     }
     if(lane<0){laneOcc.push([]);lane=laneOcc.length-1}
+    lastLaneAtDepth[dep]=lane;
+    lastLaneAtDepth.length=dep+1;
     itSegs.forEach(sg=>{
       laneOcc[lane].push({wk:sg.wk,c0:sg.c0,c1:sg.c1});
       segs.push(Object.assign({it:it,lane:lane},sg));
+    });
     });
   });
 
@@ -1950,13 +1987,14 @@ function renderCalendar(box,items,label,src,viewOpts){
         return;
       }
       const bar=document.createElement('div');
-      bar.className='cbar'+(sg.openL?' ol':'')+(sg.openR?' or':'');
+      const isChild=(sg.it.depth||0)>0;
+      bar.className='cbar'+(sg.openL?' ol':'')+(sg.openR?' or':'')+(isChild?' cbar-child':'');
       bar.dataset.ri=String(sg.it.ri);
       bar.style.gridColumn=(sg.c0+1)+' / span '+(sg.c1-sg.c0+1);
       bar.style.gridRow=sg.lane+2;
       const st=calBarStyle(src.key,sg.it.ri,sg.it.status);
       if(st)bar.style.cssText=bar.style.cssText+';'+st;
-      bar.textContent=(sg.openL?'‹ ':'')+sg.it.name+(sg.openR?' ›':'');
+      bar.textContent=(sg.openL?'‹ ':'')+(isChild?'↳ ':'')+sg.it.name+(sg.openR?' ›':'');
       bar.title=sg.it.name+(sg.it.status?' · '+sg.it.status:'')
         +'\n'+(sg.it.start||'-')+(sg.it.end&&sg.it.end!==sg.it.start?(' ~ '+sg.it.end+' ('+sg.days+'일)'):'')
         +'\n\n마우스를 올리면 강조되고, 클릭하면 표에서 해당 행을 표시합니다.';
