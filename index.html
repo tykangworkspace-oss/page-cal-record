@@ -335,7 +335,10 @@ function paintSelect(el){
 function select(v,opts){return '<select>'+opts.map(o=>'<option '+(v===o?'selected':'')+'>'+o+'</option>').join('')+'</select>'}
 const cfg={"wbs": {"el": "wbsRows", "n": 12, "date": [4, 5], "num": [7], "sel": {"6": ["예정", "진행중", "완료", "보류"]}, "asg": [3], "parent": 11, "defaults": {"6": "예정", "7": "0"}}, "docs": {"el": "docsRows", "n": 10, "date": [6], "num": [], "sel": {"5": ["Draft", "Review", "Approved", "Released", "미작성"]}, "asg": [4], "defaults": {"3": "RevA", "5": "Draft"}}, "issue": {"el": "issueRows", "n": 11, "date": [1, 7], "num": [], "sel": {"8": ["Open", "In Progress", "Closed"]}, "asg": [6], "defaults": {"8": "Open"}}, "change": {"el": "changeRows", "n": 10, "date": [1], "num": [], "sel": {}, "asg": [8], "defaults": {"9": "미확인"}}, "test": {"el": "testRows", "n": 11, "date": [7], "num": [], "sel": {"8": ["Not Tested", "Pass", "Fail", "Conditional"]}, "asg": [6], "defaults": {"8": "Not Tested"}}, "release": {"el": "releaseRows", "n": 8, "date": [5], "num": [], "sel": {"2": ["필수", "선택"], "4": ["미확인", "완료", "N/A"]}, "asg": [3], "defaults": {"2": "필수", "4": "미확인"}}};
 function wbsOrder(){
-  const rows=d.wbs||[];
+  return wbsOrderFor(d.wbs||[]);
+}
+
+function wbsOrderFor(rows){
   const byParent={};
   rows.forEach((r,i)=>{
     const pid=String(r[11]||'').trim();
@@ -2216,7 +2219,8 @@ function collectAllWbsItems(){
     }
     if(!pd)pd=getSeed(p.key);
     const rows=(pd&&pd.wbs)||[];
-    rows.forEach((r,wbsRi)=>{
+    wbsOrderFor(rows).forEach(({ri:wbsRi,depth})=>{
+      const r=rows[wbsRi];
       const st=r[4]||'',en=r[5]||'';
       if(!st&&!en)return;
       out.push({
@@ -2226,7 +2230,7 @@ function collectAllWbsItems(){
         name:'['+p.tab+'] '+(String(r[2]||r[0]||'').trim()||'(제목 없음)'),
         start:st,end:en,
         status:r[6]||'',
-        depth:0
+        depth:depth
       });
     });
   });
