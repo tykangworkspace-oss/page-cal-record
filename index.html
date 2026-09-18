@@ -630,15 +630,21 @@ function openFixedDocEditor(type,ri,ci){
   const ta=document.createElement('textarea');
   ta.value=val;
   ta.placeholder='자유롭게 메모나 문서를 작성하세요.';
-  ta.style.cssText='min-height:320px;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.6;border:1px solid #dde4ec;border-radius:8px;padding:10px;resize:vertical';
+  ta.style.cssText='min-height:420px;height:62vh;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.7;border:1px solid #dde4ec;border-radius:8px;padding:12px;resize:vertical';
+  ta.oninput=()=>setUnloadGuard(ta.value!==val);
   body.appendChild(ta);
   openDialog({
     title:(def&&def.name)||'텍스트탭',
     sub:'"'+rowLabel+'" 행의 문서',
     ok:'저장',
     body:body,
+    wide:true,
+    noOutsideClose:true,
+    confirmClose:()=>ta.value!==val?'현재 텍스트가 작성 중입니다. 나가시겠습니까?\n저장하지 않은 내용은 사라집니다.':null,
+    onClose:()=>setUnloadGuard(false),
     onOk:()=>{
       d[type][ri][ci]=ta.value;
+      setUnloadGuard(false);
       render(type);save(true);
       return null;
     }
@@ -1052,7 +1058,14 @@ function closeDialog(){
   const bg=document.getElementById('modalBg');
   if(!bg)return;
   bg.classList.remove('on');
-  document.getElementById('modalBox').innerHTML='';
+  const box=document.getElementById('modalBox');
+  box.innerHTML='';
+  box.style.maxWidth='';
+}
+
+/* 작성 중인 내용이 있으면 브라우저를 닫거나 새로고침할 때도 한 번 물어본다 */
+function setUnloadGuard(on){
+  window.onbeforeunload=on?function(e){e.preventDefault();e.returnValue='';return ''}:null;
 }
 
 function openDialog(o){
@@ -1064,7 +1077,15 @@ function openDialog(o){
   box.appendChild(o.body);
   const err=document.createElement('div');err.className='merr';box.appendChild(err);
   const foot=document.createElement('div');foot.className='mfoot';
-  const c=document.createElement('button');c.textContent='취소';c.onclick=closeDialog;
+  const tryClose=()=>{
+    if(o.confirmClose){
+      const msg=o.confirmClose();
+      if(msg&&!confirm(msg))return;
+    }
+    closeDialog();
+    if(o.onClose)o.onClose();
+  };
+  const c=document.createElement('button');c.textContent='취소';c.onclick=tryClose;
   const k=document.createElement('button');k.className='primary';k.textContent=o.ok||'확인';
   k.onclick=()=>{
     const msg=o.onOk();
@@ -1072,9 +1093,10 @@ function openDialog(o){
     closeDialog();
   };
   foot.appendChild(c);foot.appendChild(k);box.appendChild(foot);
+  if(o.wide)box.style.maxWidth='860px';
   bg.classList.add('on');
-  bg.onclick=e=>{if(e.target===bg)closeDialog()};
-  document.onkeydown=e=>{if(e.key==='Escape')closeDialog()};
+  bg.onclick=e=>{if(e.target===bg&&!o.noOutsideClose)tryClose()};
+  document.onkeydown=e=>{if(e.key==='Escape')tryClose()};
   const first=box.querySelector('input[type=text],textarea');
   if(first)setTimeout(()=>{try{first.focus();first.select()}catch(e){}},30);
 }
@@ -1475,15 +1497,21 @@ function openDocEditor(s,ri,ci){
   const ta=document.createElement('textarea');
   ta.value=val;
   ta.placeholder='자유롭게 메모나 문서를 작성하세요.';
-  ta.style.cssText='min-height:320px;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.6;border:1px solid #dde4ec;border-radius:8px;padding:10px;resize:vertical';
+  ta.style.cssText='min-height:420px;height:62vh;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.7;border:1px solid #dde4ec;border-radius:8px;padding:12px;resize:vertical';
+  ta.oninput=()=>setUnloadGuard(ta.value!==val);
   body.appendChild(ta);
   openDialog({
     title:s.cols[ci]||'텍스트탭',
     sub:'"'+rowLabel+'" 행의 문서',
     ok:'저장',
     body:body,
+    wide:true,
+    noOutsideClose:true,
+    confirmClose:()=>ta.value!==val?'현재 텍스트가 작성 중입니다. 나가시겠습니까?\n저장하지 않은 내용은 사라집니다.':null,
+    onClose:()=>setUnloadGuard(false),
     onOk:()=>{
       s.rows[ri][ci]=ta.value;
+      setUnloadGuard(false);
       renderSheet(s.id);saveAll();update();
       return null;
     }
