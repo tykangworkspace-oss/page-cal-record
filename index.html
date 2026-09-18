@@ -15,7 +15,7 @@ main{padding:18px;max-width:1600px;margin:auto}.page{display:none}.page.on{displ
 .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:12px}
 input,select,textarea{width:100%;box-sizing:border-box;padding:7px;border:1px solid #d7dee8;border-radius:6px;font:inherit}textarea{min-height:80px}
 .tablebox{overflow:auto;border:1px solid #dde4ec;border-radius:10px;background:#fff}table{width:100%;border-collapse:collapse;min-width:1050px}th,td{border-bottom:1px solid #eef2f6;padding:7px 8px;font-size:12px;text-align:left;vertical-align:top}th{background:#f8fafc}
-td[contenteditable],td input,td select{background:#fffdf0}.note{padding:10px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:7px;font-size:12px}
+.note{padding:10px;background:#eff6ff;border-left:4px solid #2563eb;border-radius:7px;font-size:12px}
 nav button{white-space:nowrap;flex:0 0 auto}
 nav button.addsheet{background:#eef4ff;color:#1d4ed8;font-weight:800;border:1px dashed #93c5fd;min-width:36px;padding:8px 12px;font-size:15px;line-height:1}
 nav button.addsheet:hover{background:#dbeafe}
@@ -193,10 +193,11 @@ body.resizing{cursor:col-resize;user-select:none}
 .cmore{font-size:10px;color:#94a3b8;padding:0 4px;cursor:default}
 tr.rowhi td{background:#fef9c3!important;box-shadow:inset 0 0 0 1px #facc15}
 tr.wbs-group-start td{border-top:2px solid #dde4ec}
-td.wbs-id-parent,td.wbs-id-child{padding-left:38px!important;position:relative}
-td.wbs-id-parent::before,td.wbs-id-child::before{position:absolute;left:4px;top:7px;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;white-space:nowrap;pointer-events:none;line-height:1.4}
-td.wbs-id-parent::before{content:'상위';background:#dbeafe;color:#1d4ed8}
-td.wbs-id-child::before{content:'하위';background:#e2e8f0;color:#475569}
+.rowdrag{position:absolute;left:3px;top:50%;transform:translateY(-50%);cursor:grab;color:#cbd5e1;font-size:12px;line-height:1;user-select:none}
+.rowdrag:hover{color:#94a3b8}
+.rowdrag:active{cursor:grabbing}
+tr.rowdragging td{opacity:.45}
+tr.rowdrop td{box-shadow:inset 0 2px 0 #2563eb}
 th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;font-weight:700}
 #colList{display:flex;flex-direction:column;gap:2px;margin-top:4px}
 #colList label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#334155;margin:0;padding:5px 2px;border-bottom:1px solid #f1f5f9}
@@ -249,8 +250,12 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="muted">이 프로젝트에 참여하는 담당자·팀을 한 명씩 추가하세요. 시트에서 "담당" 속성 열을 만들면 이 목록 중에서 선택할 수 있습니다.</div>
 <div class="memberlist" id="memberList"></div>
 <div class="memberadd"><input id="memberInput" type="text" placeholder="이름 입력 (예: 강태영)" onkeydown="if(event.key==='Enter'){event.preventDefault();addMember()}"><button class="primary" onclick="addMember()">+ 추가</button></div>
+</div><div class="box" style="margin-top:12px"><h3>업무 분류 목록</h3>
+<div class="muted">WBS "업무 분류" 열에서 고를 수 있는 항목입니다. 최상위 업무에서 분류를 고르면 그 아래 하위 업무들도 자동으로 같은 분류를 따라갑니다.</div>
+<div class="memberlist" id="categoryList"></div>
+<div class="memberadd"><input id="categoryInput" type="text" placeholder="분류 입력 (예: Hardware)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCategory()}"><button class="primary" onclick="addCategory()">+ 추가</button></div>
 </div><div class="box" style="margin-top:12px"><h3>기본정보</h3>
-<div class="grid3"><label>PM<input data-k="info.pm"></label><label>시작일<input type="date" data-k="info.start"></label><label>목표 종료일<input type="date" data-k="info.end"></label></div></div><div class="box" style="margin-top:12px"><div class="grid2"><label>목적<textarea data-k="info.purpose"></textarea></label><label>범위<textarea data-k="info.scope"></textarea></label><label>성공조건<textarea data-k="info.success"></textarea></label><label>Risk<textarea data-k="info.risk"></textarea></label></div></div></section><section id="wbs" class="page"><div class="actions"><h2>WBS</h2><button class="primary" onclick="add('wbs')">행 추가</button><button onclick="addFixedCol('wbs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('wbs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('wbs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>단계</th><th>업무</th><th>담당</th><th>시작</th><th>종료</th><th>상태</th><th>진행률</th><th>산출물</th><th>완료조건</th><th>비고</th><th>상위</th><th></th></tr></thead><tbody id="wbsRows"></tbody></table></div></section><section id="docs" class="page"><div class="actions"><h2>문서 List</h2><button class="primary" onclick="add('docs')">행 추가</button><button onclick="addFixedCol('docs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('docs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('docs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>문서명</th><th>구분</th><th>Rev</th><th>담당</th><th>상태</th><th>작성일</th><th>승인자</th><th>파일/링크</th><th>비고</th><th></th></tr></thead><tbody id="docsRows"></tbody></table></div></section><section id="issue" class="page"><div class="actions"><h2>Issue List</h2><button class="primary" onclick="add('issue')">행 추가</button><button onclick="addFixedCol('issue')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('issue')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('issue')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>발생일</th><th>구분</th><th>문제</th><th>원인</th><th>조치</th><th>담당</th><th>예정일</th><th>상태</th><th>재시험 결과</th><th>비고</th><th></th></tr></thead><tbody id="issueRows"></tbody></table></div></section><section id="change" class="page"><div class="actions"><h2>변경 이력</h2><button class="primary" onclick="add('change')">행 추가</button><button onclick="addFixedCol('change')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('change')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('change')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>일자</th><th>대상</th><th>기존 Rev/값</th><th>변경 Rev/값</th><th>변경내용</th><th>변경사유</th><th>영향</th><th>담당</th><th>승인</th><th></th></tr></thead><tbody id="changeRows"></tbody></table></div></section><section id="test" class="page"><div class="actions"><h2>시험 계획/결과</h2><button class="primary" onclick="add('test')">행 추가</button><button onclick="addFixedCol('test')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('test')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('test')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>분류</th><th>시험항목</th><th>조건</th><th>기대결과</th><th>실제결과</th><th>담당</th><th>시험일</th><th>결과</th><th>재시험</th><th>비고</th><th></th></tr></thead><tbody id="testRows"></tbody></table></div></section><section id="release" class="page"><div class="actions"><h2>Release Check</h2><button class="primary" onclick="add('release')">행 추가</button><button onclick="addFixedCol('release')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('release')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('release')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>No</th><th>Release 항목</th><th>필수</th><th>담당</th><th>확인</th><th>완료일</th><th>증빙 문서</th><th>비고</th><th></th></tr></thead><tbody id="releaseRows"></tbody></table></div></section><section id="allsched" class="page"><div class="actions"><h2>전체 일정</h2><button onclick="tab('dashboard',document.querySelector('nav button'))">닫기</button></div><div class="muted" style="margin-bottom:10px">모든 프로젝트의 WBS 일정을 한 달력에 모아서 보여줍니다. 특정 프로젝트 시트에 속하지 않는 전체 보기 화면입니다. 막대를 누르면 그 프로젝트로 이동해 표에서 해당 행을 보여줍니다.</div><div class="box" id="allschedBox"></div></section></main>
+<div class="grid3"><label>PM<input data-k="info.pm"></label><label>시작일<input type="date" data-k="info.start"></label><label>목표 종료일<input type="date" data-k="info.end"></label></div></div><div class="box" style="margin-top:12px"><div class="grid2"><label>목적<textarea data-k="info.purpose"></textarea></label><label>범위<textarea data-k="info.scope"></textarea></label><label>성공조건<textarea data-k="info.success"></textarea></label><label>Risk<textarea data-k="info.risk"></textarea></label></div></div></section><section id="wbs" class="page"><div class="actions"><h2>WBS</h2><button class="primary" onclick="add('wbs')">행 추가</button><button onclick="addFixedCol('wbs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('wbs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('wbs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>업무 분류</th><th>업무</th><th>담당</th><th>시작</th><th>종료</th><th>상태</th><th>진행률</th><th>산출물</th><th>완료조건</th><th>비고</th><th>상위</th><th></th></tr></thead><tbody id="wbsRows"></tbody></table></div></section><section id="docs" class="page"><div class="actions"><h2>문서 List</h2><button class="primary" onclick="add('docs')">행 추가</button><button onclick="addFixedCol('docs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('docs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('docs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>문서명</th><th>구분</th><th>Rev</th><th>담당</th><th>상태</th><th>작성일</th><th>승인자</th><th>파일/링크</th><th>비고</th><th></th></tr></thead><tbody id="docsRows"></tbody></table></div></section><section id="issue" class="page"><div class="actions"><h2>Issue List</h2><button class="primary" onclick="add('issue')">행 추가</button><button onclick="addFixedCol('issue')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('issue')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('issue')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>발생일</th><th>구분</th><th>문제</th><th>원인</th><th>조치</th><th>담당</th><th>예정일</th><th>상태</th><th>재시험 결과</th><th>비고</th><th></th></tr></thead><tbody id="issueRows"></tbody></table></div></section><section id="change" class="page"><div class="actions"><h2>변경 이력</h2><button class="primary" onclick="add('change')">행 추가</button><button onclick="addFixedCol('change')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('change')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('change')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>일자</th><th>대상</th><th>기존 Rev/값</th><th>변경 Rev/값</th><th>변경내용</th><th>변경사유</th><th>영향</th><th>담당</th><th>승인</th><th></th></tr></thead><tbody id="changeRows"></tbody></table></div></section><section id="test" class="page"><div class="actions"><h2>시험 계획/결과</h2><button class="primary" onclick="add('test')">행 추가</button><button onclick="addFixedCol('test')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('test')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('test')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>분류</th><th>시험항목</th><th>조건</th><th>기대결과</th><th>실제결과</th><th>담당</th><th>시험일</th><th>결과</th><th>재시험</th><th>비고</th><th></th></tr></thead><tbody id="testRows"></tbody></table></div></section><section id="release" class="page"><div class="actions"><h2>Release Check</h2><button class="primary" onclick="add('release')">행 추가</button><button onclick="addFixedCol('release')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('release')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('release')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>No</th><th>Release 항목</th><th>필수</th><th>담당</th><th>확인</th><th>완료일</th><th>증빙 문서</th><th>비고</th><th></th></tr></thead><tbody id="releaseRows"></tbody></table></div></section><section id="allsched" class="page"><div class="actions"><h2>전체 일정</h2><button onclick="tab('dashboard',document.querySelector('nav button'))">닫기</button></div><div class="muted" style="margin-bottom:10px">모든 프로젝트의 WBS 일정을 한 달력에 모아서 보여줍니다. 특정 프로젝트 시트에 속하지 않는 전체 보기 화면입니다. 막대를 누르면 그 프로젝트로 이동해 표에서 해당 행을 보여줍니다.</div><div class="box" id="allschedBox"></div></section></main>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
 <script>
 const ACTIVE_KEY='pm_active_project_v1';
@@ -345,18 +350,57 @@ function wbsOrderFor(rows){
     (byParent[pid]=byParent[pid]||[]).push(i);
   });
   const order=[],seen=new Set();
-  function walk(pid,depth){
-    (byParent[pid]||[]).forEach(i=>{
-      if(seen.has(i))return;
-      seen.add(i);
-      order.push({ri:i,depth:depth});
-      const id=String(rows[i][0]||'').trim();
-      if(id)walk(id,depth+1);
-    });
+  function walkNode(i,depth){
+    if(seen.has(i))return;
+    seen.add(i);
+    order.push({ri:i,depth:depth});
+    const id=String(rows[i][0]||'').trim();
+    if(id)(byParent[id]||[]).forEach(cj=>walkNode(cj,depth+1));
   }
-  walk('',0);
-  rows.forEach((r,i)=>{if(!seen.has(i)){seen.add(i);order.push({ri:i,depth:0})}});
+  // 최상위 업무는 같은 "업무 분류"끼리 모아서 보여준다 (분류 순서는 Project Info 목록 순서)
+  const catList=Array.isArray(d.taskCategories)?d.taskCategories:[];
+  const tops=(byParent['']||[]).slice();
+  const firstIdx={};
+  tops.forEach(i=>{const c=String(rows[i][1]||'').trim();if(firstIdx[c]==null)firstIdx[c]=i});
+  const rank=c=>{
+    const k=catList.indexOf(c);
+    return k>=0?k:catList.length+(firstIdx[c]||0)+1;
+  };
+  tops.sort((a,b)=>{
+    const ca=String(rows[a][1]||'').trim(),cb=String(rows[b][1]||'').trim();
+    if(ca!==cb)return rank(ca)-rank(cb);
+    return a-b;
+  });
+  tops.forEach(i=>walkNode(i,0));
+  rows.forEach((r,i)=>{if(!seen.has(i))walkNode(i,0)});
   return order;
+}
+
+function wbsSiblingRis(ri){
+  const rows=d.wbs||[];
+  const me=rows[ri];
+  if(!me)return [ri];
+  const pid=String(me[11]||'').trim();
+  const cat=String(me[1]||'').trim();
+  const out=[];
+  rows.forEach((rr,rj)=>{
+    if(String(rr[11]||'').trim()!==pid)return;
+    if(!pid&&String(rr[1]||'').trim()!==cat)return;
+    out.push(rj);
+  });
+  return out;
+}
+
+function moveWbsRow(from,to){
+  const rows=d.wbs||[];
+  const sibs=wbsSiblingRis(from);
+  const a=sibs.indexOf(from),b=sibs.indexOf(to);
+  if(a<0||b<0||a===b)return false;
+  const objs=sibs.map(i=>rows[i]);
+  const moved=objs.splice(a,1)[0];
+  objs.splice(b,0,moved);
+  sibs.forEach((slot,k)=>{rows[slot]=objs[k]});
+  return true;
 }
 
 function wbsHasChildren(ri){
@@ -380,6 +424,93 @@ function wbsDescendants(ri){
     }
   });
   return out;
+}
+
+function wbsDirectChildRis(ri){
+  const rows=d.wbs||[];
+  const id=String((rows[ri]||[])[0]||'').trim();
+  if(!id)return [];
+  const out=[];
+  rows.forEach((rr,rj)=>{if(rj!==ri&&String(rr[11]||'').trim()===id)out.push(rj)});
+  return out;
+}
+
+function wbsCascadeCategory(ri,val){
+  wbsDirectChildRis(ri).forEach(cj=>{
+    d.wbs[cj][1]=val;
+    wbsCascadeCategory(cj,val);
+  });
+}
+
+function wbsRootAncestor(ri){
+  const rows=d.wbs||[];
+  let cur=ri,guard=0;
+  while(guard++<200){
+    const pid=String((rows[cur]||[])[11]||'').trim();
+    if(!pid)return cur;
+    const pidx=rows.findIndex(r=>String(r[0]||'').trim()===pid);
+    if(pidx<0||pidx===cur)return cur;
+    cur=pidx;
+  }
+  return cur;
+}
+
+
+function wbsRegenerateIds(){
+  const rows=d.wbs||[];
+  const n=rows.length;
+  if(!n)return;
+
+  const oldIds=rows.map(r=>String(r[0]||'').trim());
+  const byOldParent={};
+  rows.forEach((r,i)=>{
+    const pid=String(r[11]||'').trim();
+    (byOldParent[pid]=byOldParent[pid]||[]).push(i);
+  });
+
+  const newIds=new Array(n);
+  const seen=new Set();
+  const catCounters={};
+
+  function assignChildren(parentIdx){
+    const kids=byOldParent[oldIds[parentIdx]]||[];
+    let k=0;
+    kids.forEach(ci=>{
+      if(seen.has(ci))return;
+      seen.add(ci);
+      k++;
+      newIds[ci]=newIds[parentIdx]+'-'+k;
+      assignChildren(ci);
+    });
+  }
+
+  const topIdxs=byOldParent['']||[];
+  topIdxs.forEach(i=>{
+    if(seen.has(i))return;
+    seen.add(i);
+    const cat=String(rows[i][1]||'').trim()||'WBS';
+    catCounters[cat]=(catCounters[cat]||0)+1;
+    newIds[i]=cat+'-'+catCounters[cat];
+  });
+  topIdxs.forEach(i=>assignChildren(i));
+
+  // orphans (parent id no longer resolves) are treated as top-level too
+  rows.forEach((r,i)=>{
+    if(seen.has(i))return;
+    seen.add(i);
+    const cat=String(rows[i][1]||'').trim()||'WBS';
+    catCounters[cat]=(catCounters[cat]||0)+1;
+    newIds[i]=cat+'-'+catCounters[cat];
+    assignChildren(i);
+  });
+
+  rows.forEach((r,i)=>{r[0]=newIds[i]});
+  rows.forEach(r=>{
+    const oldPid=String(r[11]||'').trim();
+    if(!oldPid)return;
+    const pIdx=oldIds.indexOf(oldPid);
+    if(pIdx>=0)r[11]=newIds[pIdx];
+  });
 }
 
 function extraCellEditor(type,ri,ci){
@@ -507,7 +638,11 @@ function render(type){
     const r=d[type][ri];
     const tr=document.createElement('tr');
     tr.dataset.ri=String(ri);
-    if(depth>0)tr.style.background='#fafbfc';
+    if(type==='wbs'&&depth===0&&wbsHasChildren(ri)){
+      tr.style.background='#eff6ff';
+    }else if(depth>0){
+      tr.style.background='#fafbfc';
+    }
     if(type==='wbs'&&depth===0&&idx>0)tr.classList.add('wbs-group-start');
     vis.forEach(ci=>{
       const v=r[ci],td=document.createElement('td');
@@ -516,27 +651,94 @@ function render(type){
         tr.appendChild(td);
         return;
       }
+      if(type==='wbs'&&ci===0){
+        td.textContent=v==null?'':v;
+        td.style.color='#94a3b8';
+        td.title='"업무 분류"와 상위/하위 구조에 따라 자동으로 만들어지는 ID입니다.';
+        tr.appendChild(td);
+        return;
+      }
       if(c.parent!=null&&ci===c.parent){
         const rows=d[type];
         const selfId=String(r[0]||'').trim();
+        const myCat=String(r[1]||'').trim();
         const excluded=new Set([selfId].concat(wbsDescendants(ri)));
+        const curVal=String(v||'').trim();
         const el=document.createElement('select');
         el.className='cellin';
-        const blank=document.createElement('option');blank.value='';blank.textContent='(최상위)';
-        el.appendChild(blank);
-        rows.forEach((rr,rj)=>{
+        if(type==='wbs'&&!myCat&&!curVal){
+          el.disabled=true;
+          el.title='먼저 "업무 분류"를 지정해야 상위를 고를 수 있습니다.';
+          const blank=document.createElement('option');blank.value='';blank.textContent='(업무 분류 먼저 지정)';
+          el.appendChild(blank);
+          td.appendChild(el);
+          tr.appendChild(td);
+          return;
+        }
+        // 부모를 직접 고르는 대신, 이 업무가 차지할 자리(ID)를 고른다.
+        // 값은 그대로 "상위 업무 ID"(최상위면 빈 값)이고, 보이는 이름만 그 자리의 ID다.
+        el.title='이 업무가 들어갈 자리(ID)를 고릅니다. 같은 업무 분류 안에서만 고를 수 있습니다.';
+        const parentIdOf=rj=>String(rows[rj][11]||'').trim();
+        const catOf=rj=>String(rows[rj][1]||'').trim();
+        const topBefore=rows.filter((rr,rj)=>rj!==ri&&rj<ri&&!parentIdOf(rj)&&catOf(rj)===myCat).length;
+        const op0=document.createElement('option');
+        op0.value='';op0.textContent=(myCat||'WBS')+'-'+(topBefore+1);
+        el.appendChild(op0);
+        wbsOrder().forEach(o=>{
+          const rj=o.ri;
           if(rj===ri)return;
-          const rid=String(rr[0]||'').trim();
-          if(!rid||excluded.has(rid))return;
-          const op=document.createElement('option');op.value=rid;op.textContent=rid+' · '+(rr[2]||'(제목 없음)');
+          const pid=String(rows[rj][0]||'').trim();
+          if(!pid||excluded.has(pid))return;
+          if(catOf(rj)!==myCat)return;
+          const kidsBefore=rows.filter((rr,rk)=>rk!==ri&&rk<ri&&String(rr[11]||'').trim()===pid).length;
+          const op=document.createElement('option');
+          op.value=pid;op.textContent=pid+'-'+(kidsBefore+1);
           el.appendChild(op);
         });
-        const curVal=String(v||'').trim();
-        if(curVal&&!rows.some(rr=>String(rr[0]||'').trim()===curVal)){
-          const op=document.createElement('option');op.value=curVal;op.textContent=curVal+' (없는 ID)';el.appendChild(op);
+        if(curVal&&!Array.prototype.some.call(el.options,o=>o.value===curVal)){
+          const op=document.createElement('option');op.value=curVal;op.textContent=curVal+'-? (현재 상위)';el.appendChild(op);
         }
         el.value=curVal;
-        el.onchange=()=>{d[type][ri][ci]=el.value;render(type);save(true)};
+        el.onchange=()=>{
+          d[type][ri][ci]=el.value;
+          if(type==='wbs'){
+            const root=wbsRootAncestor(ri);
+            const rootCat=d.wbs[root][1]||'';
+            d.wbs[ri][1]=rootCat;
+            wbsCascadeCategory(ri,rootCat);
+            wbsRegenerateIds();
+          }
+          render(type);save(true);
+        };
+        td.appendChild(el);
+        tr.appendChild(td);
+        return;
+      }
+      if(type==='wbs'&&ci===1){
+        const list=d.taskCategories||[];
+        const isTop=!String(r[11]||'').trim();
+        const el=document.createElement('select');
+        el.className='cellin';
+        const blank=document.createElement('option');blank.value='';blank.textContent='—';
+        el.appendChild(blank);
+        list.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;el.appendChild(op)});
+        if(v&&list.indexOf(v)<0){
+          const op=document.createElement('option');op.value=v;op.textContent=v+' (목록에 없음)';el.appendChild(op);
+        }
+        el.value=v||'';
+        if(v){el.classList.add('statsel');el.style.cssText=chipStyle(list,v)}
+        if(isTop){
+          el.onchange=()=>{
+            d.wbs[ri][1]=el.value;
+            wbsCascadeCategory(ri,el.value);
+            wbsRegenerateIds();
+            render('wbs');save(true);
+          };
+        }else{
+          el.disabled=true;
+          el.title='상위 업무의 "업무 분류"를 자동으로 따라갑니다.';
+          el.style.opacity='.7';
+        }
         td.appendChild(el);
         tr.appendChild(td);
         return;
@@ -583,17 +785,40 @@ function render(type){
           td.style.fontWeight='800';
         }
       }
-      if(type==='wbs'&&ci===0){
-        if(depth>0)td.classList.add('wbs-id-child');
-        else if(wbsHasChildren(ri))td.classList.add('wbs-id-parent');
-      }
       tr.appendChild(td);
     });
+    if(type==='wbs'){
+      const firstTd=tr.firstElementChild;
+      if(firstTd){
+        firstTd.style.position='relative';
+        firstTd.style.paddingLeft='20px';
+        const g=document.createElement('span');
+        g.className='rowdrag';g.textContent='⠿';g.draggable=true;
+        g.title='드래그해서 순서 이동 (같은 업무 분류의 같은 단계끼리)';
+        g.ondragstart=e=>{e.dataTransfer.setData('text/plain','row:'+ri);e.dataTransfer.effectAllowed='move';tr.classList.add('rowdragging')};
+        g.ondragend=()=>tr.classList.remove('rowdragging');
+        firstTd.appendChild(g);
+      }
+      tr.ondragover=e=>{e.preventDefault();tr.classList.add('rowdrop')};
+      tr.ondragleave=()=>tr.classList.remove('rowdrop');
+      tr.ondrop=e=>{
+        e.preventDefault();tr.classList.remove('rowdrop');
+        const raw=e.dataTransfer.getData('text/plain')||'';
+        if(raw.indexOf('row:')!==0)return;
+        const from=parseInt(raw.slice(4),10);
+        if(isNaN(from)||from===ri)return;
+        if(moveWbsRow(from,ri)){wbsRegenerateIds();render('wbs');save(true)}
+      };
+    }
     const x=document.createElement('td');
     x.innerHTML='<button>삭제</button>';
     x.firstChild.onclick=()=>{
       const warn=(type==='wbs'&&wbsHasChildren(ri))?'\n하위 업무는 삭제되지 않고 "최상위"로 올라갑니다.':'';
-      if(confirm('이 행을 삭제할까요?'+warn)){d[type].splice(ri,1);render(type);save(true)}
+      if(confirm('이 행을 삭제할까요?'+warn)){
+        d[type].splice(ri,1);
+        if(type==='wbs')wbsRegenerateIds();
+        render(type);save(true);
+      }
     };
     tr.appendChild(x);
     box.appendChild(tr);
@@ -601,7 +826,7 @@ function render(type){
   setupFixedTable(type);
 }
 
-function add(type){let n=cfg[type].n+extraCols(type).length,r=new Array(n).fill(''),t=Date.now().toString().slice(-4);r[0]=type.toUpperCase()+'-'+t;if(cfg[type].defaults)Object.entries(cfg[type].defaults).forEach(([k,v])=>r[+k]=v);d[type].push(r);render(type);save(true)}
+function add(type){let n=cfg[type].n+extraCols(type).length,r=new Array(n).fill(''),t=Date.now().toString().slice(-4);r[0]=type.toUpperCase()+'-'+t;if(cfg[type].defaults)Object.entries(cfg[type].defaults).forEach(([k,v])=>r[+k]=v);d[type].push(r);if(type==='wbs')wbsRegenerateIds();render(type);save(true)}
 function update(){
   const w=isHidden('wbs')?[]:(d.wbs||[]);
   const ts=taskStats();
@@ -1441,9 +1666,10 @@ function colLabel(type,ci){
   return all[ci]?all[ci].dataset.orig:'';
 }
 
+const HIDDEN_COLS_DEFAULT={wbs:[0,10],docs:[9],issue:[10],test:[10],release:[7]};
 function hiddenCols(type){
   if(!d.colhide||typeof d.colhide!=='object')d.colhide={};
-  if(!Array.isArray(d.colhide[type]))d.colhide[type]=[];
+  if(!Array.isArray(d.colhide[type]))d.colhide[type]=(HIDDEN_COLS_DEFAULT[type]||[]).slice();
   return d.colhide[type];
 }
 
@@ -1451,7 +1677,7 @@ function colOrder(type){
   const total=thAll(type).length-1;
   if(!d.colorder||typeof d.colorder!=='object')d.colorder={};
   let ord=d.colorder[type];
-  if(!Array.isArray(ord))ord=[];
+  if(!Array.isArray(ord))ord=(type==='wbs'&&total>1)?[1,0]:[];
   ord=ord.filter(i=>Number.isInteger(i)&&i>=0&&i<total);
   for(let i=0;i<total;i++)if(ord.indexOf(i)<0)ord.push(i);
   d.colorder[type]=ord;
@@ -2952,6 +3178,7 @@ function normalizeData(){
   if(!Array.isArray(d.sheetOrder))d.sheetOrder=[];
   if(!d.calColor||typeof d.calColor!=='object')d.calColor={};
   if(!d.extraCols||typeof d.extraCols!=='object')d.extraCols={};
+  if(!Array.isArray(d.taskCategories))d.taskCategories=['Requirement','System Design','Hardware','Firmware','Motor Integration','Validation','Production','Release'];
 }
 
 function fillInfo(){
@@ -3006,6 +3233,47 @@ function removeMember(i){
   saveAll();
   renderMemberList();
   refreshAssigneeColumns();
+}
+
+function renderCategoryList(){
+  const box=document.getElementById('categoryList');
+  if(!box)return;
+  const list=d.taskCategories||[];
+  if(!list.length){box.innerHTML='<span class="memberempty">아직 등록된 업무 분류가 없습니다.</span>';return}
+  box.innerHTML='';
+  list.forEach((m,i)=>{
+    const chip=document.createElement('span');
+    chip.className='memberchip';
+    const t=document.createElement('span');t.textContent=m;chip.appendChild(t);
+    const x=document.createElement('b');x.textContent='×';x.title='"'+m+'" 삭제';
+    x.onclick=()=>removeCategory(i);
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+}
+
+function addCategory(){
+  const el=document.getElementById('categoryInput');
+  if(!el)return;
+  const nm=el.value.trim();
+  if(!nm)return;
+  if(!Array.isArray(d.taskCategories))d.taskCategories=[];
+  if(d.taskCategories.indexOf(nm)>=0){alert('이미 등록된 분류입니다.');el.value='';el.focus();return}
+  d.taskCategories.push(nm);
+  el.value='';
+  saveAll();
+  renderCategoryList();
+  render('wbs');
+  el.focus();
+}
+
+function removeCategory(i){
+  const nm=d.taskCategories[i];
+  if(!confirm('"'+nm+'" 분류를 삭제할까요?\n이미 선택된 셀의 값은 그대로 남아있습니다.'))return;
+  d.taskCategories.splice(i,1);
+  saveAll();
+  renderCategoryList();
+  render('wbs');
 }
 
 let SHOW_DONE=false;
@@ -3200,6 +3468,7 @@ function applyProject(){
   fillProjectMeta();
   fillInfo();
   renderMemberList();
+  renderCategoryList();
   Object.keys(cfg).forEach(render);
   clearCustomSheets();
   initCustomSheets();
