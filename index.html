@@ -391,6 +391,34 @@ function wbsSiblingRis(ri){
   return out;
 }
 
+/* 담당 셀: 등록된 담당자/팀을 여러 명 고를 수 있는 칩 목록 */
+function assigneeCell(val,commit){
+  const list=d.members||[];
+  const box=document.createElement('div');
+  box.className='multibox';
+  const cur=val?String(val).split(',').map(x=>x.trim()).filter(Boolean):[];
+  cur.forEach(v=>{
+    const chip=document.createElement('span');
+    chip.className='chip';chip.style.cssText=chipStyle(list,v);
+    chip.textContent=v;
+    const x=document.createElement('b');x.textContent='×';x.title='"'+v+'" 빼기';
+    x.onclick=()=>commit(cur.filter(y=>y!==v).join(', '));
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+  const rest=list.filter(o=>cur.indexOf(o)<0);
+  if(rest.length){
+    const sel=document.createElement('select');
+    sel.className='addsel';sel.title='담당자 추가';
+    const blank=document.createElement('option');blank.value='';blank.textContent='＋';
+    sel.appendChild(blank);
+    rest.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
+    sel.onchange=()=>{if(!sel.value)return;commit(cur.concat([sel.value]).join(', '))};
+    box.appendChild(sel);
+  }
+  return box;
+}
+
 function moveWbsRow(from,to){
   const rows=d.wbs||[];
   const sibs=wbsSiblingRis(from);
@@ -542,18 +570,7 @@ function extraCellEditor(type,ri,ci){
     return sel;
   }
   if(ty==='assignee'){
-    const sel=document.createElement('select');
-    sel.className='cellin';
-    const blank=document.createElement('option');blank.value='';blank.textContent='—';
-    sel.appendChild(blank);
-    const list=d.members||[];
-    list.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
-    if(val&&list.indexOf(val)<0){const op=document.createElement('option');op.value=val;op.textContent=val+' (목록에 없음)';sel.appendChild(op)}
-    sel.value=val;
-    if(val)sel.classList.add('statsel');
-    sel.style.cssText=val?chipStyle(list,val):'';
-    sel.onchange=()=>{commit(sel.value);render(type)};
-    return sel;
+    return assigneeCell(val,nv=>{commit(nv);render(type)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
@@ -744,24 +761,7 @@ function render(type){
         return;
       }
       if(c.asg&&c.asg.includes(ci)){
-        const list=d.members||[];
-        const el=document.createElement('select');
-        el.className='cellin';
-        const blank=document.createElement('option');blank.value='';blank.textContent='—';
-        el.appendChild(blank);
-        list.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;el.appendChild(op)});
-        if(v&&list.indexOf(v)<0){
-          const op=document.createElement('option');op.value=v;op.textContent=v+' (목록에 없음)';el.appendChild(op);
-        }
-        el.value=v||'';
-        if(v){el.classList.add('statsel');el.style.cssText=chipStyle(list,v)}
-        el.onchange=()=>{
-          d[type][ri][ci]=el.value;
-          el.classList.toggle('statsel',!!el.value);
-          el.style.cssText=el.value?chipStyle(list,el.value):'';
-          save(true);
-        };
-        td.appendChild(el);
+        td.appendChild(assigneeCell(v,nv=>{d[type][ri][ci]=nv;render(type);save(true)}));
         tr.appendChild(td);
         return;
       }
@@ -1111,7 +1111,7 @@ const TYPE_CHOICES=[
   {v:'number',label:'숫자',desc:'진행률, 수량 등'},
   {v:'select',label:'선택',desc:'정해둔 항목 중 하나'},
   {v:'multi',label:'다중 선택',desc:'정해둔 항목 중 여러 개'},
-  {v:'assignee',label:'담당',desc:'Project Info에 등록한 담당자·팀 중에서 선택'},
+  {v:'assignee',label:'담당',desc:'Project Info에 등록한 담당자·팀 중에서 여러 명 선택'},
   {v:'doc',label:'텍스트탭',desc:'+ 버튼을 눌러 여는 별도 화면에 긴 메모/문서를 씁니다'}
 ];
 
@@ -1338,22 +1338,7 @@ function cellEditor(s,ri,ci){
     return sel;
   }
   if(ty==='assignee'){
-    const sel=document.createElement('select');
-    sel.className='cellin';
-    const blank=document.createElement('option');blank.value='';blank.textContent='—';
-    sel.appendChild(blank);
-    const list=d.members||[];
-    list.forEach(o=>{
-      const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op);
-    });
-    if(val&&list.indexOf(val)<0){
-      const op=document.createElement('option');op.value=val;op.textContent=val+' (목록에 없음)';sel.appendChild(op);
-    }
-    sel.value=val;
-    if(val)sel.classList.add('statsel');
-    sel.style.cssText=val?chipStyle(list,val):'';
-    sel.onchange=()=>{commit(sel.value);renderSheet(s.id)};
-    return sel;
+    return assigneeCell(val,nv=>{commit(nv);renderSheet(s.id)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
