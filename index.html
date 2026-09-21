@@ -100,7 +100,7 @@ header{display:flex;gap:18px;align-items:flex-start;justify-content:space-betwee
 #sheetToggles input{width:auto;margin:0;flex:0 0 auto}
 #sheetToggles .cnt{font-weight:400;color:#94a3b8;font-size:11px}
 th .coltype{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#eef2f7;color:#64748b;font-size:10px;font-weight:700;vertical-align:1px}
-td.cell-date,td.cell-number,td.cell-select,td.cell-multi,td.cell-assignee,td.cell-doc,td.cell-wbslink{padding:4px 6px}
+td.cell-date,td.cell-number,td.cell-select,td.cell-multi,td.cell-assignee,td.cell-doc,td.cell-wbslink,td.cell-scope{padding:4px 6px}
 .docwrap{display:flex;align-items:center;gap:6px;min-width:0}
 .doclink{padding:4px 10px;font-size:12px;border-radius:999px;background:#eef2f7;border:1px solid #dde4ec;cursor:pointer;font-weight:700;color:#334155;flex:0 0 auto}
 .doclink:hover{background:#e2e8f0}
@@ -257,8 +257,12 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="muted">WBS "업무 분류" 열에서 고를 수 있는 항목입니다. 최상위 업무에서 분류를 고르면 그 아래 하위 업무들도 자동으로 같은 분류를 따라갑니다.</div>
 <div class="memberlist" id="categoryList"></div>
 <div class="memberadd"><input id="categoryInput" type="text" placeholder="분류 입력 (예: Hardware)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCategory()}"><button class="primary" onclick="addCategory()">+ 추가</button></div>
+</div><div class="box" style="margin-top:12px"><h3>범위 목록</h3>
+<div class="muted">이 프로젝트가 다루는 범위를 하나씩 추가하세요. 시트에서 "범위" 속성 열을 만들면 이 목록 중에서 고를 수 있습니다.</div>
+<div class="memberlist" id="scopeList"></div>
+<div class="memberadd"><input id="scopeInput" type="text" placeholder="범위 입력 (예: HW)" onkeydown="if(event.key==='Enter'){event.preventDefault();addScope()}"><button class="primary" onclick="addScope()">+ 추가</button></div>
 </div><div class="box" style="margin-top:12px"><h3>기본정보</h3>
-<div class="grid3"><label>PM<input data-k="info.pm"></label><label>시작일<input type="date" data-k="info.start"></label><label>목표 종료일<input type="date" data-k="info.end"></label></div></div><div class="box" style="margin-top:12px"><div class="grid2"><label>목적<textarea data-k="info.purpose"></textarea></label><label>범위<textarea data-k="info.scope"></textarea></label><label>성공조건<textarea data-k="info.success"></textarea></label><label>Risk<textarea data-k="info.risk"></textarea></label></div></div></section><section id="wbs" class="page"><div class="actions"><h2>WBS</h2><button class="primary" onclick="add('wbs')">행 추가</button><button onclick="addFixedCol('wbs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('wbs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('wbs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>업무 분류</th><th>업무</th><th>담당</th><th>시작</th><th>종료</th><th>상태</th><th>진행률</th><th>산출물</th><th>완료조건</th><th>비고</th><th>상위</th><th></th></tr></thead><tbody id="wbsRows"></tbody></table></div></section><section id="docs" class="page"><div class="actions"><h2>문서 List</h2><button class="primary" onclick="add('docs')">행 추가</button><button onclick="addFixedCol('docs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('docs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('docs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>문서명</th><th>구분</th><th>Rev</th><th>담당</th><th>상태</th><th>작성일</th><th>승인자</th><th>파일/링크</th><th>비고</th><th></th></tr></thead><tbody id="docsRows"></tbody></table></div></section><section id="issue" class="page"><div class="actions"><h2>Issue List</h2><button class="primary" onclick="add('issue')">행 추가</button><button onclick="addFixedCol('issue')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('issue')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('issue')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>발생일</th><th>구분</th><th>문제</th><th>원인</th><th>조치</th><th>담당</th><th>예정일</th><th>상태</th><th>재시험 결과</th><th>비고</th><th></th></tr></thead><tbody id="issueRows"></tbody></table></div></section><section id="change" class="page"><div class="actions"><h2>변경 이력</h2><button class="primary" onclick="add('change')">행 추가</button><button onclick="addFixedCol('change')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('change')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('change')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>일자</th><th>대상</th><th>기존 Rev/값</th><th>변경 Rev/값</th><th>변경내용</th><th>변경사유</th><th>영향</th><th>담당</th><th>승인</th><th></th></tr></thead><tbody id="changeRows"></tbody></table></div></section><section id="test" class="page"><div class="actions"><h2>시험 계획/결과</h2><button class="primary" onclick="add('test')">행 추가</button><button onclick="addFixedCol('test')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('test')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('test')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>분류</th><th>시험항목</th><th>조건</th><th>기대결과</th><th>실제결과</th><th>담당</th><th>시험일</th><th>결과</th><th>재시험</th><th>비고</th><th></th></tr></thead><tbody id="testRows"></tbody></table></div></section><section id="release" class="page"><div class="actions"><h2>Release Check</h2><button class="primary" onclick="add('release')">행 추가</button><button onclick="addFixedCol('release')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('release')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('release')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>No</th><th>Release 항목</th><th>필수</th><th>담당</th><th>확인</th><th>완료일</th><th>증빙 문서</th><th>비고</th><th></th></tr></thead><tbody id="releaseRows"></tbody></table></div></section><section id="allsched" class="page"><div class="actions"><h2>전체 일정</h2><button onclick="tab('dashboard',document.querySelector('nav button'))">닫기</button></div><div class="muted" style="margin-bottom:10px">모든 프로젝트의 WBS 일정을 한 달력에 모아서 보여줍니다. 특정 프로젝트 시트에 속하지 않는 전체 보기 화면입니다. 막대를 누르면 그 프로젝트로 이동해 표에서 해당 행을 보여줍니다.</div><div class="box" id="allschedBox"></div></section></main>
+<div class="grid3"><label>PM<input data-k="info.pm"></label><label>시작일<input type="date" data-k="info.start"></label><label>목표 종료일<input type="date" data-k="info.end"></label></div></div><div class="box" style="margin-top:12px"><div class="grid2"><label>목적<textarea data-k="info.purpose"></textarea></label><label>성공조건<textarea data-k="info.success"></textarea></label></div></div></section><section id="wbs" class="page"><div class="actions"><h2>WBS</h2><button class="primary" onclick="add('wbs')">행 추가</button><button onclick="addFixedCol('wbs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('wbs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('wbs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>업무 분류</th><th>업무</th><th>담당</th><th>시작</th><th>종료</th><th>상태</th><th>진행률</th><th>산출물</th><th>완료조건</th><th>비고</th><th>상위</th><th></th></tr></thead><tbody id="wbsRows"></tbody></table></div></section><section id="docs" class="page"><div class="actions"><h2>문서 List</h2><button class="primary" onclick="add('docs')">행 추가</button><button onclick="addFixedCol('docs')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('docs')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('docs')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>문서명</th><th>구분</th><th>Rev</th><th>담당</th><th>상태</th><th>작성일</th><th>승인자</th><th>파일/링크</th><th>비고</th><th></th></tr></thead><tbody id="docsRows"></tbody></table></div></section><section id="issue" class="page"><div class="actions"><h2>Issue List</h2><button class="primary" onclick="add('issue')">행 추가</button><button onclick="addFixedCol('issue')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('issue')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('issue')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>발생일</th><th>구분</th><th>문제</th><th>원인</th><th>조치</th><th>담당</th><th>예정일</th><th>상태</th><th>재시험 결과</th><th>비고</th><th></th></tr></thead><tbody id="issueRows"></tbody></table></div></section><section id="change" class="page"><div class="actions"><h2>변경 이력</h2><button class="primary" onclick="add('change')">행 추가</button><button onclick="addFixedCol('change')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('change')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('change')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>일자</th><th>대상</th><th>기존 Rev/값</th><th>변경 Rev/값</th><th>변경내용</th><th>변경사유</th><th>영향</th><th>담당</th><th>승인</th><th></th></tr></thead><tbody id="changeRows"></tbody></table></div></section><section id="test" class="page"><div class="actions"><h2>시험 계획/결과</h2><button class="primary" onclick="add('test')">행 추가</button><button onclick="addFixedCol('test')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('test')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('test')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>ID</th><th>분류</th><th>시험항목</th><th>조건</th><th>기대결과</th><th>실제결과</th><th>담당</th><th>시험일</th><th>결과</th><th>재시험</th><th>비고</th><th></th></tr></thead><tbody id="testRows"></tbody></table></div></section><section id="release" class="page"><div class="actions"><h2>Release Check</h2><button class="primary" onclick="add('release')">행 추가</button><button onclick="addFixedCol('release')" title="새로운 속성(열)을 추가합니다">속성 추가</button><button onclick="manageCols('release')" title="열 이름 변경 / 숨긴 열 되살리기">열 관리</button><button onclick="hideSheet('release')" title="이 시트를 목록에서 감춥니다. 데이터는 지워지지 않으며 Project Info에서 다시 표시할 수 있습니다">시트 삭제</button></div><div class="tablebox"><table><thead><tr><th>No</th><th>Release 항목</th><th>필수</th><th>담당</th><th>확인</th><th>완료일</th><th>증빙 문서</th><th>비고</th><th></th></tr></thead><tbody id="releaseRows"></tbody></table></div></section><section id="allsched" class="page"><div class="actions"><h2>전체 일정</h2><button onclick="tab('dashboard',document.querySelector('nav button'))">닫기</button></div><div class="muted" style="margin-bottom:10px">모든 프로젝트의 WBS 일정을 한 달력에 모아서 보여줍니다. 특정 프로젝트 시트에 속하지 않는 전체 보기 화면입니다. 막대를 누르면 그 프로젝트로 이동해 표에서 해당 행을 보여줍니다.</div><div class="box" id="allschedBox"></div></section></main>
 <div class="modal-bg" id="modalBg"><div class="modal" id="modalBox"></div></div>
 <script>
 const ACTIVE_KEY='pm_active_project_v1';
@@ -413,6 +417,34 @@ function assigneeCell(val,commit){
   if(rest.length){
     const sel=document.createElement('select');
     sel.className='addsel';sel.title='담당자 추가';
+    const blank=document.createElement('option');blank.value='';blank.textContent='＋';
+    sel.appendChild(blank);
+    rest.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
+    sel.onchange=()=>{if(!sel.value)return;commit(cur.concat([sel.value]).join(', '))};
+    box.appendChild(sel);
+  }
+  return box;
+}
+
+/* 범위 셀: Project Info에 등록한 범위를 여러 개 고를 수 있는 칩 목록 */
+function scopeCell(val,commit){
+  const list=d.scopes||[];
+  const box=document.createElement('div');
+  box.className='multibox';
+  const cur=val?String(val).split(',').map(x=>x.trim()).filter(Boolean):[];
+  cur.forEach(v=>{
+    const chip=document.createElement('span');
+    chip.className='chip';chip.style.cssText=chipStyle(list,v);
+    chip.textContent=v;
+    const x=document.createElement('b');x.textContent='×';x.title='"'+v+'" 빼기';
+    x.onclick=()=>commit(cur.filter(y=>y!==v).join(', '));
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+  const rest=list.filter(o=>cur.indexOf(o)<0);
+  if(rest.length){
+    const sel=document.createElement('select');
+    sel.className='addsel';sel.title='범위 추가';
     const blank=document.createElement('option');blank.value='';blank.textContent='＋';
     sel.appendChild(blank);
     rest.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;sel.appendChild(op)});
@@ -641,6 +673,9 @@ function extraCellEditor(type,ri,ci){
   }
   if(ty==='wbslink'){
     return wbsLinkCell(val,nv=>{commit(nv);render(type)});
+  }
+  if(ty==='scope'){
+    return scopeCell(val,nv=>{commit(nv);render(type)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
@@ -946,7 +981,7 @@ function renderDashInfo(){
   box.innerHTML='<div class="infotop">'
     +kv('PM',info.pm)+kv('시작일',info.start)+kv('목표 종료일',info.end)
     +'</div><div class="infolong">'
-    +kvl('목적',info.purpose)+kvl('범위',info.scope)+kvl('성공조건',info.success)+kvl('Risk',info.risk)
+    +kvl('목적',info.purpose)+kvl('범위',(d.scopes||[]).join(', '))+kvl('성공조건',info.success)
     +'</div>';
 }
 const BACKUP_DIR_DB='pm_backup_directory_v1';
@@ -1031,7 +1066,7 @@ async function resetData(){
 
 /* ===== 열 너비 조정 ===== */
 const COLW_MIN=60,COLW_ACT=74;
-const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150,wbslink:170};
+const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150,wbslink:170,scope:150};
 
 function fixedWidths(id){
   if(!d.colw||typeof d.colw!=='object')d.colw={};
@@ -1205,7 +1240,8 @@ const TYPE_CHOICES=[
   {v:'multi',label:'다중 선택',desc:'정해둔 항목 중 여러 개'},
   {v:'assignee',label:'담당',desc:'Project Info에 등록한 담당자·팀 중에서 여러 명 선택'},
   {v:'doc',label:'텍스트탭',desc:'+ 버튼을 눌러 여는 별도 화면에 긴 메모/문서를 씁니다'},
-  {v:'wbslink',label:'WBS 연결',desc:'WBS의 업무 ID를 골라 연결합니다 (여러 개 가능)'}
+  {v:'wbslink',label:'WBS 연결',desc:'WBS의 업무 ID를 골라 연결합니다 (여러 개 가능)'},
+  {v:'scope',label:'범위',desc:'Project Info에 등록한 범위 중에서 선택 (여러 개 가능)'}
 ];
 
 /* 속성(열) 대화상자 — 추가/편집 공용 */
@@ -1262,7 +1298,7 @@ function colDialog(opt){
 
 /* ===== 사용자 추가 시트 (+) ===== */
 const COL_TYPES=[['text','텍스트'],['date','날짜'],['number','숫자'],['select','선택'],['multi','다중 선택']];
-const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭',wbslink:'WBS 연결'};
+const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭',wbslink:'WBS 연결',scope:'범위'};
 const CHIP_COLORS=['#e0e7ff|#3730a3','#dcfce7|#166534','#fee2e2|#991b1b','#fef3c7|#92400e',
   '#e0f2fe|#075985','#f3e8ff|#6b21a8','#ffe4e6|#9f1239','#ecfccb|#3f6212'];
 
@@ -1435,6 +1471,9 @@ function cellEditor(s,ri,ci){
   }
   if(ty==='wbslink'){
     return wbsLinkCell(val,nv=>{commit(nv);renderSheet(s.id)});
+  }
+  if(ty==='scope'){
+    return scopeCell(val,nv=>{commit(nv);renderSheet(s.id)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
@@ -1753,11 +1792,23 @@ function colLabel(type,ci){
   return all[ci]?all[ci].dataset.orig:'';
 }
 
-const HIDDEN_COLS_DEFAULT={wbs:[0,10],docs:[9],issue:[10],test:[10],release:[7]};
+const HIDDEN_COLS_DEFAULT={wbs:[10],docs:[0,9],issue:[0,10],change:[0],test:[0,10],release:[0,7]};
 function hiddenCols(type){
   if(!d.colhide||typeof d.colhide!=='object')d.colhide={};
   if(!Array.isArray(d.colhide[type]))d.colhide[type]=(HIDDEN_COLS_DEFAULT[type]||[]).slice();
   return d.colhide[type];
+}
+
+/* 이미 쓰고 있던 프로젝트에도 "WBS 외 시트의 ID 열 숨김"을 한 번만 적용한다 */
+function migrateHideIds(){
+  if(d._hideIdsMigrated)return;
+  d._hideIdsMigrated=true;
+  if(!d.colhide||typeof d.colhide!=='object')d.colhide={};
+  ['docs','issue','change','test','release'].forEach(t=>{
+    const cur=d.colhide[t];
+    if(Array.isArray(cur)&&cur.indexOf(0)<0)cur.push(0);
+  });
+  if(Array.isArray(d.colhide.wbs))d.colhide.wbs=d.colhide.wbs.filter(i=>i!==0);
 }
 
 function colOrder(type){
@@ -3260,12 +3311,17 @@ function normalizeData(){
   if(!d.colw||typeof d.colw!=='object')d.colw={};
   if(!d.colname||typeof d.colname!=='object')d.colname={};
   if(!d.colhide||typeof d.colhide!=='object')d.colhide={};
+  migrateHideIds();
   if(!d.colorder||typeof d.colorder!=='object')d.colorder={};
   if(!Array.isArray(d.members))d.members=[];
   if(!Array.isArray(d.sheetOrder))d.sheetOrder=[];
   if(!d.calColor||typeof d.calColor!=='object')d.calColor={};
   if(!d.extraCols||typeof d.extraCols!=='object')d.extraCols={};
   if(!Array.isArray(d.taskCategories))d.taskCategories=['Requirement','System Design','Hardware','Firmware','Motor Integration','Validation','Production','Release'];
+  if(!Array.isArray(d.scopes)){
+    const legacy=String((d.info&&d.info.scope)||'').split(/[,\/]/).map(x=>x.trim()).filter(Boolean);
+    d.scopes=legacy;
+  }
 }
 
 function fillInfo(){
@@ -3361,6 +3417,52 @@ function removeCategory(i){
   saveAll();
   renderCategoryList();
   render('wbs');
+}
+
+function refreshScopeColumns(){
+  (d.custom||[]).forEach(s=>{if((s.types||[]).indexOf('scope')>=0)renderSheet(s.id)});
+  Object.keys(cfg).forEach(t=>{
+    if(extraCols(t).some(def=>def&&def.type==='scope'))render(t);
+  });
+}
+
+function renderScopeList(){
+  const box=document.getElementById('scopeList');
+  if(!box)return;
+  const list=d.scopes||[];
+  if(!list.length){box.innerHTML='<span class="memberempty">아직 등록된 범위가 없습니다.</span>';return}
+  box.innerHTML='';
+  list.forEach((m,i)=>{
+    const chip=document.createElement('span');
+    chip.className='memberchip';
+    const t=document.createElement('span');t.textContent=m;chip.appendChild(t);
+    const x=document.createElement('b');x.textContent='×';x.title='"'+m+'" 삭제';
+    x.onclick=()=>removeScope(i);
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+}
+
+function addScope(){
+  const el=document.getElementById('scopeInput');
+  if(!el)return;
+  const nm=el.value.trim();
+  if(!nm)return;
+  if(!Array.isArray(d.scopes))d.scopes=[];
+  if(d.scopes.indexOf(nm)>=0){alert('이미 등록된 범위입니다.');el.value='';el.focus();return}
+  d.scopes.push(nm);
+  el.value='';
+  saveAll();
+  renderScopeList();refreshScopeColumns();update();
+  el.focus();
+}
+
+function removeScope(i){
+  const nm=d.scopes[i];
+  if(!confirm('"'+nm+'" 범위를 삭제할까요?\n이미 선택된 셀의 값은 그대로 남아있습니다.'))return;
+  d.scopes.splice(i,1);
+  saveAll();
+  renderScopeList();refreshScopeColumns();update();
 }
 
 let SHOW_DONE=false;
@@ -3556,6 +3658,7 @@ function applyProject(){
   fillInfo();
   renderMemberList();
   renderCategoryList();
+  renderScopeList();
   Object.keys(cfg).forEach(render);
   clearCustomSheets();
   initCustomSheets();
