@@ -100,7 +100,7 @@ header{display:flex;gap:18px;align-items:flex-start;justify-content:space-betwee
 #sheetToggles input{width:auto;margin:0;flex:0 0 auto}
 #sheetToggles .cnt{font-weight:400;color:#94a3b8;font-size:11px}
 th .coltype{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:#eef2f7;color:#64748b;font-size:10px;font-weight:700;vertical-align:1px}
-td.cell-date,td.cell-number,td.cell-select,td.cell-multi,td.cell-assignee,td.cell-doc{padding:4px 6px}
+td.cell-date,td.cell-number,td.cell-select,td.cell-multi,td.cell-assignee,td.cell-doc,td.cell-wbslink{padding:4px 6px}
 .docwrap{display:flex;align-items:center;gap:6px;min-width:0}
 .doclink{padding:4px 10px;font-size:12px;border-radius:999px;background:#eef2f7;border:1px solid #dde4ec;cursor:pointer;font-weight:700;color:#334155;flex:0 0 auto}
 .doclink:hover{background:#e2e8f0}
@@ -113,6 +113,9 @@ select.cellin{cursor:pointer}
 .celltext:focus{background:#fff;box-shadow:0 0 0 2px #2563eb33}
 .multibox{display:flex;gap:4px;flex-wrap:wrap;align-items:center;padding:3px 2px}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+.chip.wbschip{background:#e0e7ff;color:#3730a3;cursor:pointer}
+.chip.wbschip:hover{background:#c7d2fe}
+.chip.wbschip.missing{background:#fee2e2;color:#991b1b;cursor:default}
 .chip b{cursor:pointer;opacity:.55;font-weight:900}
 .chip b:hover{opacity:1}
 .addsel{border:1px dashed #cbd5e1;background:transparent;border-radius:999px;font-size:11px;padding:2px 4px;width:auto;color:#64748b;cursor:pointer}
@@ -419,6 +422,67 @@ function assigneeCell(val,commit){
   return box;
 }
 
+/* WBS 연결 셀: 다른 시트에서 WBS 업무 ID를 골라 연결 */
+function wbsLinkCell(val,commit){
+  const rows=d.wbs||[];
+  const box=document.createElement('div');
+  box.className='multibox';
+  const cur=val?String(val).split(',').map(x=>x.trim()).filter(Boolean):[];
+  cur.forEach(v=>{
+    const rj=rows.findIndex(r=>String(r[0]||'').trim()===v);
+    const chip=document.createElement('span');
+    chip.className='chip wbschip'+(rj<0?' missing':'');
+    chip.textContent=v;
+    chip.title=(rj>=0?(v+' · '+(rows[rj][2]||'(제목 없음)')+'\n클릭하면 WBS에서 해당 업무를 보여줍니다.'):(v+' — WBS에 없는 ID입니다.'));
+    if(rj>=0)chip.onclick=()=>{
+      tab('wbs',document.querySelector('nav button[data-fixed="wbs"]'));
+      focusRow({kind:'fixed',key:'wbs'},rj);
+    };
+    const x=document.createElement('b');x.textContent='×';x.title='연결 해제';
+    x.onclick=e=>{e.stopPropagation();commit(cur.filter(y=>y!==v).join(', '))};
+    chip.appendChild(x);
+    box.appendChild(chip);
+  });
+  const sel=document.createElement('select');
+  sel.className='addsel';sel.title='WBS 업무 연결';
+  const blank=document.createElement('option');blank.value='';blank.textContent='＋';
+  sel.appendChild(blank);
+  let any=false;
+  wbsOrder().forEach(o=>{
+    const id=String((rows[o.ri]||[])[0]||'').trim();
+    if(!id||cur.indexOf(id)>=0)return;
+    any=true;
+    const op=document.createElement('option');
+    op.value=id;
+    op.textContent='　'.repeat(o.depth)+id+' · '+(rows[o.ri][2]||'(제목 없음)');
+    sel.appendChild(op);
+  });
+  if(any){
+    sel.onchange=()=>{if(!sel.value)return;commit(cur.concat([sel.value]).join(', '))};
+    box.appendChild(sel);
+  }
+  return box;
+}
+
+/* WBS ID가 다시 매겨지면 다른 시트의 "WBS 연결" 값도 같이 바꿔준다 */
+function remapWbsLinks(map){
+  const fix=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean)
+    .map(p=>map[p]!=null?map[p]:p).join(', ');
+  Object.keys(cfg).forEach(t=>{
+    extraCols(t).forEach((def,i)=>{
+      if(!def||def.type!=='wbslink')return;
+      const ci=cfg[t].n+i;
+      (d[t]||[]).forEach(r=>{if(r[ci])r[ci]=fix(r[ci])});
+    });
+  });
+  (d.custom||[]).forEach(s=>{
+    (s.types||[]).forEach((t,ci)=>{
+      if(t!=='wbslink')return;
+      (s.rows||[]).forEach(r=>{if(r[ci])r[ci]=fix(r[ci])});
+    });
+  });
+}
+
 function moveWbsRow(from,to){
   const rows=d.wbs||[];
   const sibs=wbsSiblingRis(from);
@@ -532,6 +596,8 @@ function wbsRegenerateIds(){
     assignChildren(i);
   });
 
+  const idMap={};
+  oldIds.forEach((oid,i)=>{if(oid&&newIds[i]&&oid!==newIds[i])idMap[oid]=newIds[i]});
   rows.forEach((r,i)=>{r[0]=newIds[i]});
   rows.forEach(r=>{
     const oldPid=String(r[11]||'').trim();
@@ -539,6 +605,7 @@ function wbsRegenerateIds(){
     const pIdx=oldIds.indexOf(oldPid);
     if(pIdx>=0)r[11]=newIds[pIdx];
   });
+  if(Object.keys(idMap).length)remapWbsLinks(idMap);
 }
 
 function extraCellEditor(type,ri,ci){
@@ -571,6 +638,9 @@ function extraCellEditor(type,ri,ci){
   }
   if(ty==='assignee'){
     return assigneeCell(val,nv=>{commit(nv);render(type)});
+  }
+  if(ty==='wbslink'){
+    return wbsLinkCell(val,nv=>{commit(nv);render(type)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
@@ -961,7 +1031,7 @@ async function resetData(){
 
 /* ===== 열 너비 조정 ===== */
 const COLW_MIN=60,COLW_ACT=74;
-const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150};
+const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150,wbslink:170};
 
 function fixedWidths(id){
   if(!d.colw||typeof d.colw!=='object')d.colw={};
@@ -1134,7 +1204,8 @@ const TYPE_CHOICES=[
   {v:'select',label:'선택',desc:'정해둔 항목 중 하나'},
   {v:'multi',label:'다중 선택',desc:'정해둔 항목 중 여러 개'},
   {v:'assignee',label:'담당',desc:'Project Info에 등록한 담당자·팀 중에서 여러 명 선택'},
-  {v:'doc',label:'텍스트탭',desc:'+ 버튼을 눌러 여는 별도 화면에 긴 메모/문서를 씁니다'}
+  {v:'doc',label:'텍스트탭',desc:'+ 버튼을 눌러 여는 별도 화면에 긴 메모/문서를 씁니다'},
+  {v:'wbslink',label:'WBS 연결',desc:'WBS의 업무 ID를 골라 연결합니다 (여러 개 가능)'}
 ];
 
 /* 속성(열) 대화상자 — 추가/편집 공용 */
@@ -1191,7 +1262,7 @@ function colDialog(opt){
 
 /* ===== 사용자 추가 시트 (+) ===== */
 const COL_TYPES=[['text','텍스트'],['date','날짜'],['number','숫자'],['select','선택'],['multi','다중 선택']];
-const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭'};
+const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭',wbslink:'WBS 연결'};
 const CHIP_COLORS=['#e0e7ff|#3730a3','#dcfce7|#166534','#fee2e2|#991b1b','#fef3c7|#92400e',
   '#e0f2fe|#075985','#f3e8ff|#6b21a8','#ffe4e6|#9f1239','#ecfccb|#3f6212'];
 
@@ -1361,6 +1432,9 @@ function cellEditor(s,ri,ci){
   }
   if(ty==='assignee'){
     return assigneeCell(val,nv=>{commit(nv);renderSheet(s.id)});
+  }
+  if(ty==='wbslink'){
+    return wbsLinkCell(val,nv=>{commit(nv);renderSheet(s.id)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
