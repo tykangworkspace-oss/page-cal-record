@@ -321,7 +321,19 @@ let DATA=getSeed(KEY);
 let d=load();
 
 function load(){try{return JSON.parse(localStorage.getItem(KEY))||JSON.parse(JSON.stringify(DATA))}catch(e){return JSON.parse(JSON.stringify(DATA))}}
-function save(silent=false){document.querySelectorAll('[data-k]').forEach(e=>{let [a,b]=e.dataset.k.split('.');d[a][b]=e.value});localStorage.setItem(KEY,JSON.stringify(d));update();if(!silent)alert('저장했습니다.')}
+/* 브라우저가 로컬 저장소를 막아둔 경우(사생활 보호 모드 등)에도 작업은 계속되도록 한다 */
+let STORAGE_WARNED=false;
+function storageSet(key,val){
+  try{localStorage.setItem(key,val);return true}
+  catch(e){
+    if(!STORAGE_WARNED){
+      STORAGE_WARNED=true;
+      alert('이 브라우저에서는 자동 저장(브라우저 저장소)을 쓸 수 없습니다.\n작업은 그대로 하실 수 있지만 창을 닫으면 사라집니다.\n"전체 저장" 또는 "GitHub 동기화"로 저장해 주세요.');
+    }
+    return false;
+  }
+}
+function save(silent=false){document.querySelectorAll('[data-k]').forEach(e=>{let [a,b]=e.dataset.k.split('.');d[a][b]=e.value});storageSet(KEY,JSON.stringify(d));update();if(!silent)alert('저장했습니다.')}
 function tab(id,b){document.querySelectorAll('.page').forEach(x=>x.classList.remove('on'));document.getElementById(id).classList.add('on');document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
 function esc(v){return String(v??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('"','&quot;')}
 const STATUS_COLOR={
@@ -1059,7 +1071,7 @@ async function chooseBackupFolder(){
 
 async function resetData(){
   if(confirm('[ '+getProject(KEY).tab+' ] 프로젝트를 샘플 데이터로 초기화할까요?\n추가한 시트도 모두 삭제됩니다.\n다른 프로젝트 데이터는 그대로 유지됩니다.')){
-    localStorage.removeItem(KEY);
+    try{localStorage.removeItem(KEY)}catch(e){}
     location.reload();
   }
 }
@@ -1308,7 +1320,7 @@ const SHEET_TEMPLATE={
   opts:[[],['제작','디버깅','문서 작업','회의','기타'],[],['예정','진행','완료','보류'],[],[],[],[]]
 };
 
-function saveAll(){localStorage.setItem(KEY,JSON.stringify(d))}
+function saveAll(){storageSet(KEY,JSON.stringify(d))}
 function getSheet(id){return d.custom.find(s=>s.id===id)}
 function newSheetId(){return 'sheet_'+Date.now().toString(36)+Math.floor(Math.random()*1000)}
 
