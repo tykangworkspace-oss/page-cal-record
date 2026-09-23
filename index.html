@@ -411,6 +411,37 @@ function wbsSiblingRis(ri){
   return out;
 }
 
+/* contenteditable 셀에서 줄바꿈을 살려서 읽기.
+   textContent 는 엔터로 만들어진 <br>/<div> 를 버리므로 innerText 를 쓴다. */
+function ceRead(el){
+  let out='';
+  const nl=()=>{if(out&&out.slice(-1)!=='\n')out+='\n'};
+  (function walk(node){
+    node.childNodes.forEach(c=>{
+      if(c.nodeType===3){out+=c.nodeValue;return}
+      if(c.nodeType!==1)return;
+      if(c.tagName==='BR'){out+='\n';return}
+      const block=/^(DIV|P|LI|UL|OL|TR|TABLE|H[1-6]|BLOCKQUOTE|PRE|SECTION|ARTICLE)$/.test(c.tagName);
+      if(block)nl();
+      walk(c);
+      if(block)nl();
+    });
+  })(el);
+  return out.replace(/\r\n?/g,'\n').replace(/ /g,' ').replace(/[ \t]+\n/g,'\n').trim();
+}
+/* contenteditable 셀 공통 설정: 값 표시 + 서식 없는 붙여넣기 + blur 시 저장 */
+function makeEditable(el,val,commit){
+  el.contentEditable='true';
+  el.textContent=val==null?'':val;
+  el.onpaste=e=>{
+    const cd=e.clipboardData||window.clipboardData;if(!cd)return;
+    e.preventDefault();
+    document.execCommand('insertText',false,String(cd.getData('text/plain')||'').replace(/\r\n?/g,'\n'));
+  };
+  el.onblur=()=>commit(ceRead(el));
+  return el;
+}
+
 /* 담당 셀: 등록된 담당자/팀을 여러 명 고를 수 있는 칩 목록 */
 function assigneeCell(val,commit){
   const list=d.members||[];
@@ -733,8 +764,8 @@ function extraCellEditor(type,ri,ci){
     return wrap;
   }
   const box=document.createElement('div');
-  box.className='celltext';box.contentEditable='true';box.textContent=val;
-  box.onblur=()=>commit(box.textContent.trim());
+  box.className='celltext';
+  makeEditable(box,val,commit);
   return box;
 }
 
@@ -899,8 +930,7 @@ function render(type){
         if(el.tagName==='SELECT'){el.classList.add('statsel');paintSelect(el)}
         el.onchange=()=>{d[type][ri][ci]=el.value;if(el.tagName==='SELECT')paintSelect(el);save(true)};
       }else{
-        td.contentEditable='true';td.textContent=v==null?'':v;
-        td.onblur=()=>{d[type][ri][ci]=td.textContent.trim();save(true)};
+        makeEditable(td,v,val=>{d[type][ri][ci]=val;save(true)});
       }
       if(type==='wbs'&&ci===2){
         if(depth>0){
@@ -1513,8 +1543,8 @@ function cellEditor(s,ri,ci){
     return box;
   }
   const td=document.createElement('div');
-  td.className='celltext';td.contentEditable='true';td.textContent=val;
-  td.onblur=()=>commit(td.textContent.trim());
+  td.className='celltext';
+  makeEditable(td,val,commit);
   return td;
 }
 
