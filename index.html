@@ -120,6 +120,34 @@ select.cellin{cursor:pointer}
 .chip b{cursor:pointer;opacity:.55;font-weight:900}
 .chip b:hover{opacity:1}
 .addsel{border:1px dashed #cbd5e1;background:transparent;border-radius:999px;font-size:11px;padding:2px 4px;width:auto;color:#64748b;cursor:pointer}
+/* 내 휴가 — 자동 계산 칸(입력칸이 아니라 결과 표시) */
+.autocell{padding:5px 8px;font-variant-numeric:tabular-nums;color:#166534;background:#dcfce7;
+  border-radius:6px;text-align:right;font-weight:600;font-size:13px}
+.autocell.minus{color:#991b1b;background:#fee2e2}
+.leavebar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:12px;padding:10px 12px;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}
+.leavefield{display:flex;align-items:center;gap:6px;font-size:13px;color:#334155;font-weight:600}
+.leavefield input{width:72px;padding:5px 8px;border:1px solid #cbd5e1;border-radius:7px;font-size:13px}
+.leaveunit{color:#64748b;font-weight:400}
+.leavesum{margin-left:auto;font-size:12.5px;color:#475569}
+.leavesum b{color:#0f172a;font-size:14px}
+.leavesum b.minus{color:#b91c1c}
+.leavetablebox{max-height:46vh;overflow-y:auto;overflow-x:hidden;border:1px solid #e2e8f0;border-radius:10px}
+/* 전역 table{min-width:1050px} 은 시트 표용이므로 이 표에서는 해제한다 */
+.leavetable{width:100%;min-width:0;table-layout:fixed;border-collapse:collapse;font-size:13px}
+.leavetable th{position:sticky;top:0;background:#f1f5f9;color:#475569;font-size:12px;font-weight:600;
+  text-align:left;padding:8px 6px;border-bottom:1px solid #e2e8f0;white-space:nowrap;overflow:hidden}
+.leavetable td{padding:5px 6px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+.leavetable tr:last-child td{border-bottom:0}
+.leavetable input.cellin{width:100%;min-width:0;box-sizing:border-box}
+.leavetable th:nth-child(1),.leavetable td:nth-child(1){width:140px}
+.leavetable th:nth-child(2),.leavetable td:nth-child(2){width:96px}
+.leavetable th:nth-child(4),.leavetable td:nth-child(4){width:88px}
+.leavetable th:nth-child(5),.leavetable td:nth-child(5){width:92px}
+.leavetable th:nth-child(6),.leavetable td:nth-child(6){width:92px}
+.leavetable th:nth-child(7),.leavetable td:nth-child(7){width:40px}
+.leaveempty{color:#94a3b8;text-align:center;padding:22px 8px}
+.leaveadd{margin-top:10px}
 /* 오른쪽 아래 버전 표시 — 클릭을 가로막지 않도록 pointer-events 를 꺼 둔다 */
 .verbadge{position:fixed;right:10px;bottom:8px;z-index:6;pointer-events:none;
   font-size:11px;color:#94a3b8;background:#ffffffd9;border:1px solid #e2e8f0;
@@ -240,7 +268,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 @media(max-width:900px){.cards{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}.grid3{grid-template-columns:1fr}.infolong{grid-template-columns:1fr}}
 </style></head>
 <body>
-<header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="showAllSchedule()" title="모든 프로젝트의 WBS 일정을 한 달력에 모아서 크게 봅니다">전체 일정 보기</button><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button onclick="holidayDialog()" title="공휴일 .ics 주소를 등록해 모든 달력에 표시합니다">공휴일 표시</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button onclick="ghDialog()" title="비공개 GitHub 저장소에 데이터를 저장하고 다른 PC에서 불러옵니다">GitHub 동기화</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
+<header><div class="hleft"><h1 id="projTitle">M1x 파생품 양산 프로젝트</h1><div class="sub"><span class="pstatus" id="projStatus" style="display:none"></span></div><div class="projbar" id="projBar"><span class="plabel">프로젝트</span></div></div><div class="hright"><div class="htools"><button class="gcalbtn" onclick="showAllSchedule()" title="모든 프로젝트의 WBS 일정을 한 달력에 모아서 크게 봅니다">전체 일정 보기</button><button class="gcalbtn" onclick="openGcal()" title="구글 캘린더를 새 창으로 엽니다">구글 캘린더 열기</button><button onclick="holidayDialog()" title="공휴일 .ics 주소를 등록해 모든 달력에 표시합니다">공휴일 표시</button><button onclick="leaveDialog()" title="내 휴가를 기록하고 남은 연차를 확인합니다. 등록한 휴가는 &quot;전체 일정 보기&quot;에 표시됩니다">내 휴가</button><button class="hsave" onclick="saveAllProjects()" title="모든 프로젝트를 브라우저에 저장하고, 지정한 폴더에 데이터가 담긴 HTML 파일로 저장합니다">전체 저장</button><button onclick="chooseBackupFolder()" title="모든 프로젝트가 공통으로 사용하는 폴더입니다">저장 경로 선택</button><button onclick="exportWbsIcs()" title="현재 프로젝트의 WBS 일정을 .ics 파일로 저장합니다">WBS → ICS</button><button onclick="ghDialog()" title="비공개 GitHub 저장소에 데이터를 저장하고 다른 PC에서 불러옵니다">GitHub 동기화</button><button class="hdanger" onclick="resetData()">초기화</button></div><div class="pathbar off" id="backupPathStatus" title="브라우저 보안 정책상 폴더 전체 경로는 알 수 없고 폴더 이름만 표시됩니다">저장 경로: 미설정</div></div></header>
 <nav><button class="on" onclick="tab('dashboard',this)">Dashboard</button><button class="" onclick="tab('info',this)">Project Info</button><button class="" data-fixed="wbs" onclick="tab('wbs',this)">WBS</button><button class="" data-fixed="docs" onclick="tab('docs',this)">문서 List</button><button class="" data-fixed="issue" onclick="tab('issue',this)">Issue List</button><button class="" data-fixed="change" onclick="tab('change',this)">변경 이력</button><button class="" data-fixed="test" onclick="tab('test',this)">시험 계획/결과</button><button class="" data-fixed="release" onclick="tab('release',this)">Release Check</button><button id="addSheetBtn" class="addsheet" title="시트 추가" onclick="addSheet()">+</button></nav>
 <main><section id="dashboard" class="page on"><div class="actions"><h2>Dashboard</h2></div>
 <div class="cards"><div class="card"><div class="muted" id="cardLabel1">WBS 진행률</div><div class="metric" id="pct">0%</div><div class="bar"><i id="bar"></i></div></div><div class="card"><div class="muted">완료 업무</div><div class="metric" id="done">0</div></div><div class="card"><div class="muted" id="cardLabel3">오픈 Issue</div><div class="metric" id="open">0</div></div><div class="card"><div class="muted">Release Check</div><div class="metric" id="rel">0%</div><div class="bar"><i id="relbar"></i></div></div></div><div class="box" style="margin-top:12px"><h3 style="margin:0 0 10px">기본정보</h3><div id="dashInfoGrid"></div></div><div class="box" style="margin-top:12px"><div class="gbar-actions"><h3 style="margin:0 8px 0 0">간트 차트</h3>
@@ -272,7 +300,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.0';
+const APP_VERSION='v1.2';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -374,7 +402,8 @@ const STATUS_COLOR={
   'Draft':'#eef2f7|#475569','Review':'#dbeafe|#1d4ed8','Approved':'#dcfce7|#166534','Released':'#ccfbf1|#0f766e','미작성':'#fee2e2|#991b1b',
   'Open':'#fee2e2|#991b1b','In Progress':'#dbeafe|#1d4ed8','Closed':'#dcfce7|#166534',
   'Not Tested':'#eef2f7|#475569','Pass':'#dcfce7|#166534','Fail':'#fee2e2|#991b1b','Conditional':'#fef3c7|#92400e',
-  '미확인':'#eef2f7|#475569','N/A':'#e2e8f0|#334155','필수':'#ffe4e6|#9f1239','선택':'#e0e7ff|#3730a3'
+  '미확인':'#eef2f7|#475569','N/A':'#e2e8f0|#334155','필수':'#ffe4e6|#9f1239','선택':'#e0e7ff|#3730a3',
+  '휴가':'#ffedd5|#9a3412'
 };
 
 function statusStyle(v){
@@ -1418,6 +1447,77 @@ const SHEET_TEMPLATE={
   opts:[[],[],[],[],[],[],['예정','진행중','완료','보류'],[],[],[],[]]
 };
 
+/* ===== 내 휴가 =====
+   프로젝트가 아니라 공휴일처럼 이 PC 전체에서 공통으로 쓰는 개인 기록이다.
+   LEAVE = {annualDays, hoursPerDay, rows:[{date,startH,reason,useH}, ...]} */
+const LEAVE_KEY='pm_leave_v1';
+let LEAVE=loadLeave();
+
+function loadLeave(){
+  let o=null;
+  try{o=JSON.parse(storageGet(LEAVE_KEY))}catch(e){}
+  return normLeave(o);
+}
+function normLeave(o){
+  if(!o||typeof o!=='object')o={};
+  if(!(+o.annualDays>0))o.annualDays=15;
+  if(!(+o.hoursPerDay>0))o.hoursPerDay=8;
+  if(!Array.isArray(o.rows))o.rows=[];
+  o.rows=o.rows.filter(r=>r&&typeof r==='object').map(r=>({
+    date:String(r.date||''),
+    startH:r.startH===''||r.startH==null?'':String(r.startH),
+    reason:String(r.reason||''),
+    useH:r.useH===''||r.useH==null?'':String(r.useH)
+  }));
+  return o;
+}
+function saveLeave(){storageSet(LEAVE_KEY,JSON.stringify(LEAVE))}
+
+/* 날짜 순으로 정렬한 인덱스 (빈 날짜는 입력 순서대로 뒤에) */
+function leaveOrder(){
+  return LEAVE.rows.map((r,i)=>i).sort((a,b)=>{
+    const da=LEAVE.rows[a].date||'9999-99-99', db=LEAVE.rows[b].date||'9999-99-99';
+    if(da!==db)return da<db?-1:1;
+    return a-b;
+  });
+}
+
+/* 날짜 순으로 사용 시간을 누적해 각 행의 잔여를 구한다 → {행인덱스: {leftH,leftD}} */
+function leaveBalances(){
+  const perDay=+LEAVE.hoursPerDay||8;
+  let left=(+LEAVE.annualDays||0)*perDay;
+  const out={};
+  leaveOrder().forEach(i=>{
+    left-=(parseFloat(LEAVE.rows[i].useH)||0);
+    out[i]={leftH:left,leftD:perDay?left/perDay:0};
+  });
+  return out;
+}
+function leaveTotals(){
+  const perDay=+LEAVE.hoursPerDay||8;
+  const total=(+LEAVE.annualDays||0)*perDay;
+  let used=0;
+  LEAVE.rows.forEach(r=>{used+=(parseFloat(r.useH)||0)});
+  return {total:total,used:used,leftH:total-used,leftD:perDay?(total-used)/perDay:0,perDay:perDay};
+}
+/* 소수점 끝의 0을 떼어 14.75 / 13 처럼 보여준다 */
+function leaveNum(v){
+  if(!isFinite(v))return '';
+  return String(Math.round(v*100)/100);
+}
+
+/* 전체 일정 달력에 넣을 내 휴가 항목 */
+function leaveCalItems(){
+  return LEAVE.rows
+    .map((r,i)=>({r:r,i:i}))
+    .filter(x=>/^\d{4}-\d{2}-\d{2}$/.test(x.r.date))
+    .map(x=>({
+      ri:x.i,
+      name:'🌴 '+(x.r.reason||'휴가')+(x.r.useH?(' ('+leaveNum(parseFloat(x.r.useH))+'h)'):''),
+      start:x.r.date,end:x.r.date,status:'휴가',depth:0,leave:true
+    }));
+}
+
 function saveAll(){storageSet(KEY,JSON.stringify(d))}
 function getSheet(id){return d.custom.find(s=>s.id===id)}
 function newSheetId(){return 'sheet_'+Date.now().toString(36)+Math.floor(Math.random()*1000)}
@@ -1518,6 +1618,126 @@ function buildSheet(s){
   const ci=sheetCalItems(s);
   if(ci){const cb=calBoxFor(s.id,s.id);if(cb)renderCalendar(cb,ci,'달력',{kind:'sheet',key:s.id})}
   layoutNav();
+}
+
+/* ===== 내 휴가 관리 대화상자 (공휴일 표시 옆 버튼) ===== */
+function leaveDialog(){
+  const body=document.createElement('div');
+
+  const bar=document.createElement('div');
+  bar.className='leavebar';
+  const mk=(label,key,suffix)=>{
+    const wrap=document.createElement('label');
+    wrap.className='leavefield';
+    const t=document.createElement('span');t.textContent=label;
+    const inp=document.createElement('input');
+    inp.type='number';inp.min='0';inp.step='0.5';inp.value=String(LEAVE[key]);
+    inp.onchange=()=>{
+      const v=parseFloat(inp.value);
+      if(!(v>0)){inp.value=String(LEAVE[key]);return}
+      LEAVE[key]=v;saveLeave();paint();
+    };
+    const u=document.createElement('span');u.className='leaveunit';u.textContent=suffix;
+    wrap.appendChild(t);wrap.appendChild(inp);wrap.appendChild(u);
+    return wrap;
+  };
+  bar.appendChild(mk('올해 휴가','annualDays','일'));
+  bar.appendChild(mk('하루 근무','hoursPerDay','시간'));
+  const sum=document.createElement('div');sum.className='leavesum';
+  bar.appendChild(sum);
+  body.appendChild(bar);
+
+  const wrap=document.createElement('div');
+  wrap.className='leavetablebox';
+  const table=document.createElement('table');
+  table.className='leavetable';
+  table.innerHTML='<thead><tr><th>날짜</th><th>휴가 시작 시간</th><th>이유</th>'
+    +'<th>사용 시간</th><th>남은 시간</th><th>남은 날짜</th><th></th></tr></thead><tbody></tbody>';
+  wrap.appendChild(table);
+  body.appendChild(wrap);
+
+  const addBtn=document.createElement('button');
+  addBtn.type='button';addBtn.className='primary leaveadd';addBtn.textContent='+ 휴가 추가';
+  addBtn.onclick=()=>{
+    LEAVE.rows.push({date:'',startH:'',reason:'',useH:''});
+    saveLeave();paint();
+    const last=table.querySelector('tbody tr:last-child input');
+    if(last)last.focus();
+  };
+  body.appendChild(addBtn);
+
+  const hint=document.createElement('div');
+  hint.className='mhint';
+  hint.textContent='남은 시간과 남은 날짜는 날짜 순서대로 자동 계산됩니다. 등록한 휴가는 "전체 일정 보기" 달력에 함께 표시됩니다.';
+  body.appendChild(hint);
+
+  function paint(){
+    const tb=table.querySelector('tbody');
+    tb.innerHTML='';
+    const bal=leaveBalances();
+    const order=leaveOrder();
+    order.forEach(i=>{
+      const r=LEAVE.rows[i];
+      const tr=document.createElement('tr');
+      const cell=(node)=>{const td=document.createElement('td');td.appendChild(node);tr.appendChild(td);return td};
+
+      const dt=document.createElement('input');
+      dt.type='date';dt.className='cellin';dt.value=r.date;
+      dt.onchange=()=>{r.date=dt.value;saveLeave();paint()};
+      cell(dt);
+
+      const sh=document.createElement('input');
+      sh.type='number';sh.className='cellin';sh.min='0';sh.max='24';sh.value=r.startH;
+      sh.onchange=()=>{r.startH=sh.value.trim();saveLeave()};
+      cell(sh);
+
+      const rs=document.createElement('input');
+      rs.type='text';rs.className='cellin';rs.value=r.reason;rs.placeholder='예) 오전 반반차';
+      rs.onchange=()=>{r.reason=rs.value.trim();saveLeave()};
+      cell(rs);
+
+      const uh=document.createElement('input');
+      uh.type='number';uh.className='cellin';uh.min='0';uh.step='0.5';uh.value=r.useH;
+      uh.onchange=()=>{r.useH=uh.value.trim();saveLeave();paint()};
+      cell(uh);
+
+      const b=bal[i]||{leftH:0,leftD:0};
+      [b.leftH,b.leftD].forEach(v=>{
+        const el=document.createElement('div');
+        el.className='autocell'+(v<0?' minus':'');
+        el.textContent=leaveNum(v);
+        cell(el);
+      });
+
+      const del=document.createElement('button');
+      del.type='button';del.className='colx';del.textContent='×';del.title='이 휴가 삭제';
+      del.onclick=()=>{LEAVE.rows.splice(i,1);saveLeave();paint()};
+      cell(del);
+
+      tb.appendChild(tr);
+    });
+    if(!order.length){
+      const tr=document.createElement('tr');
+      const td=document.createElement('td');
+      td.colSpan=7;td.className='leaveempty';td.textContent='아직 등록한 휴가가 없습니다. 아래 "+ 휴가 추가"를 눌러 주세요.';
+      tr.appendChild(td);tb.appendChild(tr);
+    }
+    const t=leaveTotals();
+    sum.innerHTML='총 <b>'+leaveNum(t.total)+'</b>시간('+leaveNum(LEAVE.annualDays)+'일)'
+      +' · 사용 <b>'+leaveNum(t.used)+'</b>시간'
+      +' · 남음 <b class="'+(t.leftH<0?'minus':'')+'">'+leaveNum(t.leftH)+'</b>시간('+leaveNum(t.leftD)+'일)';
+  }
+  paint();
+
+  openDialog({
+    title:'내 휴가 관리',
+    sub:'프로젝트와 상관없이 이 PC에 공통으로 저장되는 개인 휴가 기록입니다.',
+    ok:'닫기',
+    wide:true,
+    body:body,
+    onOk:()=>{saveLeave();renderAllSchedule();return null},
+    onClose:()=>{renderAllSchedule()}
+  });
 }
 
 function chipStyle(opts,v){
@@ -1799,6 +2019,9 @@ function sheetMap(s){
   const dates=[];
   cols.forEach((c,i)=>{if(types[i]==='date')dates.push(i)});
   let iS=colIdx(cols,/시작/),iE=colIdx(cols,/마감|종료|마무리|완료일/);
+  // 이름만 비슷하고 날짜가 아닌 열("휴가 시작 시간" 등)을 일정으로 잘못 잡지 않도록 한다
+  if(iS>=0&&types[iS]!=='date')iS=-1;
+  if(iE>=0&&types[iE]!=='date')iE=-1;
   if(iS<0&&dates.length)iS=dates[0];
   if(iE<0&&dates.length>1)iE=dates[dates.length-1];
   if(iE===iS)iE=-1;
@@ -2222,6 +2445,7 @@ function focusRow(src,ri){
   if(src.kind==='cross'){
     const it=(src.items||[])[ri];
     if(!it)return;
+    if(it.leave){leaveDialog();return}   // 내 휴가는 WBS 행이 없으므로 휴가 관리 화면을 연다
     if(it.projectKey&&it.projectKey!==KEY)switchProject(it.projectKey);
     tab('wbs',document.querySelector('nav button[data-fixed="wbs"]'));
     focusRow({kind:'fixed',key:'wbs'},it.wbsRi);
@@ -2713,15 +2937,17 @@ function collectAllWbsItems(){
       });
     });
   });
-  out.forEach((it,i)=>{it.ri=i});
-  return out;
+  // 내 휴가는 프로젝트와 무관한 개인 일정이라 맨 앞에 모아서 보여준다
+  const items=leaveCalItems().concat(out);
+  items.forEach((it,i)=>{it.ri=i});
+  return items;
 }
 
 function renderAllSchedule(){
   const box=document.getElementById('allschedBox');
   if(!box)return;
   const items=collectAllWbsItems();
-  renderCalendar(box,items,'전체 일정 (모든 프로젝트 WBS)',{kind:'cross',key:'allsched_wbs',items:items},{big:true,maxLane:6});
+  renderCalendar(box,items,'전체 일정 (모든 프로젝트 WBS + 내 휴가)',{kind:'cross',key:'allsched_wbs',items:items},{big:true,maxLane:6});
 }
 
 function showAllSchedule(){
