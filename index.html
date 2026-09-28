@@ -272,7 +272,7 @@ const BUILTIN=[{"key": "m1x_project_v1", "tab": "M1x 파생품 양산", "title":
 const BLANK_SEED={info:{name:'',pm:'',start:'',end:'',purpose:'',scope:'',success:'',risk:''},wbs:[],docs:[],issue:[],change:[],test:[],release:[]};
 function loadProjects(){
   let list=[];
-  try{const s=JSON.parse(localStorage.getItem(REG_KEY));if(Array.isArray(s)&&s.length)list=s}catch(e){}
+  try{const s=JSON.parse(storageGet(REG_KEY));if(Array.isArray(s)&&s.length)list=s}catch(e){}
   BUILTIN.forEach(b=>{
     if(!list.some(p=>p&&p.key===b.key))list.push({key:b.key,tab:b.tab,title:b.title,sub:b.sub,note:b.note});
   });
@@ -283,13 +283,36 @@ function loadProjects(){
   });
   return list;
 }
-function saveProjects(){try{localStorage.setItem(REG_KEY,JSON.stringify(PROJECTS))}catch(e){}}
+function saveProjects(){storageSet(REG_KEY,JSON.stringify(PROJECTS))}
 const EMBED_TS_KEY='pm_embed_ts';
+
+/* 브라우저 저장소를 못 쓰는 환경(사생활 보호 모드, 일부 file:// 설정 등)에서도
+   창을 닫기 전까지는 데이터가 유지되도록 메모리 대체 저장소를 둔다. */
+let MEM_STORE=null;
+function memStore(){if(!MEM_STORE)MEM_STORE={};return MEM_STORE}
+function storageGet(key){
+  try{return localStorage.getItem(key)}
+  catch(e){return (MEM_STORE&&MEM_STORE[key]!=null)?MEM_STORE[key]:null}
+}
+function storageRemove(key){
+  try{localStorage.removeItem(key)}catch(e){}
+  if(MEM_STORE)delete MEM_STORE[key];
+}
+
 function importEmbedded(){
   const E=window.PM_EMBEDDED;
   if(!E||!E.stores)return;
   let stamp='';
-  try{stamp=localStorage.getItem(EMBED_TS_KEY)||''}catch(e){return}
+  try{stamp=localStorage.getItem(EMBED_TS_KEY)||''}
+  catch(e){
+    /* 저장소가 막혀 있어도 파일에 담아온 데이터는 보여줘야 한다.
+       (덮어쓸 로컬 데이터 자체가 없으므로 확인 질문도 필요 없다) */
+    const m=memStore();
+    Object.keys(E.stores).forEach(k=>{m[k]=JSON.stringify(E.stores[k])});
+    if(Array.isArray(E.projects)&&E.projects.length)m[REG_KEY]=JSON.stringify(E.projects);
+    if(E.active)m[ACTIVE_KEY]=E.active;
+    return;
+  }
   if(stamp===E.ts)return;
   let hasLocal=false;
   try{
@@ -316,17 +339,18 @@ function getSeed(k){
   const p=PROJECTS.find(x=>x.key===k);
   return (p&&p.seed)?p.seed:BLANK_SEED;
 }
-let KEY=(function(){try{const s=localStorage.getItem(ACTIVE_KEY);
+let KEY=(function(){try{const s=storageGet(ACTIVE_KEY);
   return PROJECTS.some(p=>p.key===s)?s:PROJECTS[0].key}catch(e){return PROJECTS[0].key}})();
 let DATA=getSeed(KEY);
 let d=load();
 
-function load(){try{return JSON.parse(localStorage.getItem(KEY))||JSON.parse(JSON.stringify(DATA))}catch(e){return JSON.parse(JSON.stringify(DATA))}}
+function load(){try{return JSON.parse(storageGet(KEY))||JSON.parse(JSON.stringify(DATA))}catch(e){return JSON.parse(JSON.stringify(DATA))}}
 /* 브라우저가 로컬 저장소를 막아둔 경우(사생활 보호 모드 등)에도 작업은 계속되도록 한다 */
 let STORAGE_WARNED=false;
 function storageSet(key,val){
   try{localStorage.setItem(key,val);return true}
   catch(e){
+    memStore()[key]=val; /* 최소한 이번 세션(프로젝트 전환 포함) 동안은 유지된다 */
     if(!STORAGE_WARNED){
       STORAGE_WARNED=true;
       alert('이 브라우저에서는 자동 저장(브라우저 저장소)을 쓸 수 없습니다.\n작업은 그대로 하실 수 있지만 창을 닫으면 사라집니다.\n"전체 저장" 또는 "GitHub 동기화"로 저장해 주세요.');
@@ -542,8 +566,9 @@ function wbsLinkCell(val,commit){
 
 /* WBS ID가 다시 매겨지면 다른 시트의 "WBS 연결" 값도 같이 바꿔준다 */
 function remapWbsLinks(map){
+  // map[id]='' 로 넣으면 해당 연결을 지운다(삭제된 WBS 항목 정리용)
   const fix=v=>String(v||'').split(',').map(x=>x.trim()).filter(Boolean)
-    .map(p=>map[p]!=null?map[p]:p).join(', ');
+    .map(p=>map[p]!=null?map[p]:p).filter(Boolean).join(', ');
   Object.keys(cfg).forEach(t=>{
     extraCols(t).forEach((def,i)=>{
       if(!def||def.type!=='wbslink')return;
@@ -679,7 +704,10 @@ function wbsRegenerateIds(){
     const oldPid=String(r[11]||'').trim();
     if(!oldPid)return;
     const pIdx=oldIds.indexOf(oldPid);
-    if(pIdx>=0)r[11]=newIds[pIdx];
+    // 상위가 사라졌으면 최상위로 올린다(위 번호 매기기와 동일).
+    // 여기서 비우지 않으면 남은 문자열이 나중에 같은 ID를 새로 받은
+    // 다른 업무와 우연히 일치해 엉뚱한 곳의 하위로 끌려 들어간다.
+    r[11]=pIdx>=0?newIds[pIdx]:'';
   });
   if(Object.keys(idMap).length)remapWbsLinks(idMap);
 }
@@ -969,8 +997,13 @@ function render(type){
     x.firstChild.onclick=()=>{
       const warn=(type==='wbs'&&wbsHasChildren(ri))?'\n하위 업무는 삭제되지 않고 "최상위"로 올라갑니다.':'';
       if(confirm('이 행을 삭제할까요?'+warn)){
+        const deadId=type==='wbs'?String((d.wbs[ri]||[])[0]||'').trim():'';
         d[type].splice(ri,1);
-        if(type==='wbs')wbsRegenerateIds();
+        if(type==='wbs'){
+          // ID가 다시 매겨지기 전에, 사라진 항목을 가리키던 "WBS 연결"을 먼저 지운다.
+          if(deadId){const gone={};gone[deadId]='';remapWbsLinks(gone)}
+          wbsRegenerateIds();
+        }
         render(type);save(true);
       }
     };
@@ -1102,7 +1135,7 @@ async function chooseBackupFolder(){
 
 async function resetData(){
   if(confirm('[ '+getProject(KEY).tab+' ] 프로젝트를 샘플 데이터로 초기화할까요?\n추가한 시트도 모두 삭제됩니다.\n다른 프로젝트 데이터는 그대로 유지됩니다.')){
-    try{localStorage.removeItem(KEY)}catch(e){}
+    storageRemove(KEY);
     location.reload();
   }
 }
@@ -1999,6 +2032,8 @@ function deleteExtraCol(type,ci){
   }
   if(d.colhide&&Array.isArray(d.colhide[type]))d.colhide[type]=reindexAfterDelete(d.colhide[type],ci);
   if(d.colorder&&Array.isArray(d.colorder[type]))d.colorder[type]=reindexAfterDelete(d.colorder[type],ci);
+  // 너비는 열 번호로 저장되므로 한 칸씩 당겨준다(맨 끝 작업 열 너비도 같이 따라온다)
+  if(d.colw&&Array.isArray(d.colw[type]))d.colw[type].splice(ci,1);
   if(THCACHE[type])THCACHE[type].splice(ci,1);
 
   render(type);save(true);
@@ -2622,7 +2657,7 @@ function collectAllWbsItems(){
     if(p.key===KEY){
       pd=d;
     }else{
-      try{pd=JSON.parse(localStorage.getItem(p.key))}catch(e){}
+      try{pd=JSON.parse(storageGet(p.key))}catch(e){}
     }
     if(!pd)pd=getSeed(p.key);
     const rows=(pd&&pd.wbs)||[];
@@ -2785,15 +2820,13 @@ function renderGantt(){
 async function saveAllProjects(){
   save(true);
   saveProjects();
-  try{localStorage.setItem(ACTIVE_KEY,KEY)}catch(e){}
+  storageSet(ACTIVE_KEY,KEY);
   const names=[];
   PROJECTS.forEach(p=>{
-    try{
-      if(p.key!==KEY&&!localStorage.getItem(p.key)){
-        localStorage.setItem(p.key,JSON.stringify(getSeed(p.key)));
-      }
-      names.push(p.tab);
-    }catch(e){}
+    if(p.key!==KEY&&!storageGet(p.key)){
+      storageSet(p.key,JSON.stringify(getSeed(p.key)));
+    }
+    names.push(p.tab);
   });
 
   const lines=['브라우저 저장: 프로젝트 '+names.length+'개'];
@@ -3100,7 +3133,7 @@ function buildPayload(){
   PROJECTS.forEach(p=>{
     if(p.key===KEY){payload.stores[p.key]=d;return}
     try{
-      const v=JSON.parse(localStorage.getItem(p.key));
+      const v=JSON.parse(storageGet(p.key));
       if(v&&typeof v==='object')payload.stores[p.key]=v;
     }catch(e){}
   });
@@ -3110,9 +3143,9 @@ function buildPayload(){
 function writePayload(p){
   if(!p||!p.stores)return false;
   try{
-    Object.keys(p.stores).forEach(k=>localStorage.setItem(k,JSON.stringify(p.stores[k])));
-    if(Array.isArray(p.projects)&&p.projects.length)localStorage.setItem(REG_KEY,JSON.stringify(p.projects));
-    if(p.active)localStorage.setItem(ACTIVE_KEY,p.active);
+    Object.keys(p.stores).forEach(k=>storageSet(k,JSON.stringify(p.stores[k])));
+    if(Array.isArray(p.projects)&&p.projects.length)storageSet(REG_KEY,JSON.stringify(p.projects));
+    if(p.active)storageSet(ACTIVE_KEY,p.active);
     return true;
   }catch(e){return false}
 }
@@ -3637,11 +3670,11 @@ function deleteProject(){
   if(PROJECTS.length<=1){alert('마지막 남은 프로젝트는 삭제할 수 없습니다.');return}
   if(!confirm('"'+p.tab+'" 프로젝트를 삭제할까요?\n이 프로젝트에 입력한 모든 데이터가 함께 삭제되며 되돌릴 수 없습니다.'))return;
   if(!confirm('한 번 더 확인합니다.\n정말 삭제할까요?'))return;
-  try{localStorage.removeItem(p.key)}catch(e){}
+  storageRemove(p.key);
   PROJECTS=PROJECTS.filter(x=>x.key!==p.key);
   saveProjects();
   KEY=PROJECTS[0].key;
-  try{localStorage.setItem(ACTIVE_KEY,KEY)}catch(e){}
+  storageSet(ACTIVE_KEY,KEY);
   applyProject();
   const first=document.querySelector('nav button');
   if(first)tab('dashboard',first);
@@ -3716,7 +3749,7 @@ function switchProject(key){
   if(key===KEY)return;
   SHOW_DONE=false;
   KEY=key;
-  try{localStorage.setItem(ACTIVE_KEY,KEY)}catch(e){}
+  storageSet(ACTIVE_KEY,KEY);
   applyProject();
   const first=document.querySelector('nav button');
   tab('dashboard',first);
