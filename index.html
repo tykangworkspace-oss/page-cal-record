@@ -522,6 +522,25 @@ function scopeCell(val,commit){
   return box;
 }
 
+/* 업무 분류 셀: Project Info에 등록한 업무 분류 중 하나를 고른다 (WBS의 "업무 분류"와 같은 목록) */
+function categoryCell(val,commit){
+  const list=d.taskCategories||[];
+  const v=String(val||'').trim();
+  const el=document.createElement('select');
+  el.className='cellin';
+  const blank=document.createElement('option');blank.value='';blank.textContent='—';
+  el.appendChild(blank);
+  list.forEach(o=>{const op=document.createElement('option');op.value=o;op.textContent=o;el.appendChild(op)});
+  if(v&&list.indexOf(v)<0){
+    const op=document.createElement('option');op.value=v;op.textContent=v+' (목록에 없음)';el.appendChild(op);
+  }
+  el.value=v;
+  if(v){el.classList.add('statsel');el.style.cssText=chipStyle(list,v)}
+  if(!list.length)el.title='Project Info → "업무 분류 목록"에서 항목을 먼저 추가해 주세요.';
+  el.onchange=()=>commit(el.value);
+  return el;
+}
+
 /* WBS 연결 셀: 다른 시트에서 WBS 업무 ID를 골라 연결 */
 function wbsLinkCell(val,commit){
   const rows=d.wbs||[];
@@ -748,6 +767,9 @@ function extraCellEditor(type,ri,ci){
   }
   if(ty==='scope'){
     return scopeCell(val,nv=>{commit(nv);render(type)});
+  }
+  if(ty==='category'){
+    return categoryCell(val,nv=>{commit(nv);render(type)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
@@ -1142,7 +1164,7 @@ async function resetData(){
 
 /* ===== 열 너비 조정 ===== */
 const COLW_MIN=60,COLW_ACT=74;
-const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150,wbslink:170,scope:150};
+const COLW_DEFAULT={text:190,date:132,number:96,select:136,multi:190,assignee:136,doc:150,wbslink:170,scope:150,category:150};
 
 function fixedWidths(id){
   if(!d.colw||typeof d.colw!=='object')d.colw={};
@@ -1317,7 +1339,8 @@ const TYPE_CHOICES=[
   {v:'assignee',label:'담당',desc:'Project Info에 등록한 담당자·팀 중에서 여러 명 선택'},
   {v:'doc',label:'텍스트탭',desc:'+ 버튼을 눌러 여는 별도 화면에 긴 메모/문서를 씁니다'},
   {v:'wbslink',label:'WBS 연결',desc:'WBS의 업무 ID를 골라 연결합니다 (여러 개 가능)'},
-  {v:'scope',label:'범위',desc:'Project Info에 등록한 범위 중에서 선택 (여러 개 가능)'}
+  {v:'scope',label:'범위',desc:'Project Info에 등록한 범위 중에서 선택 (여러 개 가능)'},
+  {v:'category',label:'업무 분류',desc:'Project Info에 등록한 업무 분류 중에서 선택'}
 ];
 
 /* 속성(열) 대화상자 — 추가/편집 공용 */
@@ -1374,14 +1397,17 @@ function colDialog(opt){
 
 /* ===== 사용자 추가 시트 (+) ===== */
 const COL_TYPES=[['text','텍스트'],['date','날짜'],['number','숫자'],['select','선택'],['multi','다중 선택']];
-const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭',wbslink:'WBS 연결',scope:'범위'};
+const TYPE_LABEL={text:'텍스트',date:'날짜',number:'숫자',select:'선택',multi:'다중 선택',assignee:'담당',doc:'텍스트탭',wbslink:'WBS 연결',scope:'범위',category:'업무 분류'};
 const CHIP_COLORS=['#e0e7ff|#3730a3','#dcfce7|#166534','#fee2e2|#991b1b','#fef3c7|#92400e',
   '#e0f2fe|#075985','#f3e8ff|#6b21a8','#ffe4e6|#9f1239','#ecfccb|#3f6212'];
 
+/* 새 시트 기본 양식 — WBS와 같은 구성.
+   커스텀 시트에는 WBS 같은 상위/하위 계층이 없으므로, "상위" 자리는
+   WBS의 일정 ID를 고르는 "상위 일정"(WBS 연결)로 대신한다. */
 const SHEET_TEMPLATE={
-  cols:['시작날짜','업무구분','할일','진행상태','진행률','상세 내용','마무리날짜','관련 폴더 경로'],
-  types:['date','select','text','select','number','text','date','text'],
-  opts:[[],['제작','디버깅','문서 작업','회의','기타'],[],['예정','진행','완료','보류'],[],[],[],[]]
+  cols:['업무 분류','상위 일정','업무','담당','시작','종료','상태','진행률','산출물','완료조건','참고'],
+  types:['category','wbslink','text','assignee','date','date','select','number','text','text','doc'],
+  opts:[[],[],[],[],[],[],['예정','진행중','완료','보류'],[],[],[],[]]
 };
 
 function saveAll(){storageSet(KEY,JSON.stringify(d))}
@@ -1414,7 +1440,7 @@ function addSheet(){
   body.appendChild(fieldLabel('시트 양식'));
   let mode='task';
   body.appendChild(choiceGroup([
-    {v:'task',label:'업무 관리 양식',desc:'시작날짜 · 업무구분 · 할일 · 진행상태 · 진행률 · 상세 내용 · 마무리날짜 · 관련 폴더 경로'},
+    {v:'task',label:'WBS 양식',desc:'업무 분류 · 상위 일정 · 업무 · 담당 · 시작 · 종료 · 상태 · 진행률 · 산출물 · 완료조건 · 참고'},
     {v:'free',label:'직접 입력',desc:'열 이름을 내가 지정합니다. 종류는 나중에 ⚙ 로 바꿀 수 있습니다.'}
   ],mode,v=>{mode=v;sync()},'one'));
 
@@ -1550,6 +1576,9 @@ function cellEditor(s,ri,ci){
   }
   if(ty==='scope'){
     return scopeCell(val,nv=>{commit(nv);renderSheet(s.id)});
+  }
+  if(ty==='category'){
+    return categoryCell(val,nv=>{commit(nv);renderSheet(s.id)});
   }
   if(ty==='multi'){
     const box=document.createElement('div');
@@ -1770,7 +1799,7 @@ function sheetMap(s){
   let iP=colIdx(cols,/진행률|퍼센트|%/);
   if(iP<0)iP=cols.findIndex((c,i)=>types[i]==='number');
   let iN=-1;
-  const nameRes=[/할\s*일/,/업무명|작업명|제목|이름/,/내용/];
+  const nameRes=[/할\s*일/,/^업무$/,/업무명|작업명|제목|이름/,/내용/];
   for(let k=0;k<nameRes.length&&iN<0;k++){
     const j=colIdx(cols,nameRes[k]);
     if(j>=0&&(types[j]||'text')==='text')iN=j;
@@ -3483,6 +3512,7 @@ function addCategory(){
   saveAll();
   renderCategoryList();
   render('wbs');
+  refreshCategoryColumns();
   el.focus();
 }
 
@@ -3493,6 +3523,14 @@ function removeCategory(i){
   saveAll();
   renderCategoryList();
   render('wbs');
+  refreshCategoryColumns();
+}
+
+function refreshCategoryColumns(){
+  (d.custom||[]).forEach(s=>{if((s.types||[]).indexOf('category')>=0)renderSheet(s.id)});
+  Object.keys(cfg).forEach(t=>{
+    if(extraCols(t).some(def=>def&&def.type==='category'))render(t);
+  });
 }
 
 function refreshScopeColumns(){
