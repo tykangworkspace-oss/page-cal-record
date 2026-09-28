@@ -147,6 +147,14 @@ select.cellin{cursor:pointer}
 .leavetable th:nth-child(6),.leavetable td:nth-child(6){width:92px}
 .leavetable th:nth-child(7),.leavetable td:nth-child(7){width:40px}
 .leaveempty{color:#94a3b8;text-align:center;padding:22px 8px}
+.leaveyear{display:flex;align-items:center;gap:6px;margin-bottom:10px}
+/* 전역 폼 규칙(width:100%)에 밀리지 않도록 폭을 직접 정한다 */
+.leaveyear .ybtn{flex:0 0 auto;width:auto;padding:5px 11px;font-size:13px;
+  border:1px solid #cbd5e1;background:#fff;border-radius:8px;cursor:pointer}
+.leaveyear .ybtn:hover{background:#f1f5f9}
+.leaveyear .ytoday{margin-left:4px;color:#2563eb;border-color:#bfdbfe}
+.yearsel{flex:0 0 auto;width:150px;padding:5px 10px;font-size:14px;font-weight:700;color:#0f172a;
+  border:1px solid #cbd5e1;border-radius:8px;background:#fff}
 .leaveadd{margin-top:10px}
 /* 오른쪽 아래 버전 표시 — 클릭을 가로막지 않도록 pointer-events 를 꺼 둔다 */
 .verbadge{position:fixed;right:10px;bottom:8px;z-index:6;pointer-events:none;
@@ -300,7 +308,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.2';
+const APP_VERSION='v1.3';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -1449,9 +1457,13 @@ const SHEET_TEMPLATE={
 
 /* ===== 내 휴가 =====
    프로젝트가 아니라 공휴일처럼 이 PC 전체에서 공통으로 쓰는 개인 기록이다.
-   LEAVE = {annualDays, hoursPerDay, rows:[{date,startH,reason,useH}, ...]} */
+   연차는 해마다 새로 생기므로 연도별로 나눠서 관리한다.
+   LEAVE = {hoursPerDay, annual:{'2026':15,...}, rows:[{date,startH,reason,useH},...]}
+   행이 어느 해에 속하는지는 날짜 앞 4자리로 판단한다(날짜가 곧 연도). */
 const LEAVE_KEY='pm_leave_v1';
+const LEAVE_DEFAULT_DAYS=15;
 let LEAVE=loadLeave();
+let LEAVE_YEAR=null;   // 휴가 관리 창에서 보고 있는 연도
 
 function loadLeave(){
   let o=null;
@@ -1460,7 +1472,6 @@ function loadLeave(){
 }
 function normLeave(o){
   if(!o||typeof o!=='object')o={};
-  if(!(+o.annualDays>0))o.annualDays=15;
   if(!(+o.hoursPerDay>0))o.hoursPerDay=8;
   if(!Array.isArray(o.rows))o.rows=[];
   o.rows=o.rows.filter(r=>r&&typeof r==='object').map(r=>({
@@ -1469,35 +1480,64 @@ function normLeave(o){
     reason:String(r.reason||''),
     useH:r.useH===''||r.useH==null?'':String(r.useH)
   }));
+  if(!o.annual||typeof o.annual!=='object')o.annual={};
+  // 예전 형식({annualDays, rows}) → 연도별로 옮긴다
+  if(o.annualDays!=null){
+    const old=+o.annualDays>0?+o.annualDays:LEAVE_DEFAULT_DAYS;
+    const years=new Set(o.rows.map(r=>leaveYearOf(r)).filter(Boolean));
+    years.add(String(new Date().getFullYear()));
+    years.forEach(y=>{if(o.annual[y]==null)o.annual[y]=old});
+    delete o.annualDays;
+  }
+  Object.keys(o.annual).forEach(y=>{if(!(+o.annual[y]>=0))o.annual[y]=LEAVE_DEFAULT_DAYS});
   return o;
 }
 function saveLeave(){storageSet(LEAVE_KEY,JSON.stringify(LEAVE))}
 
-/* 날짜 순으로 정렬한 인덱스 (빈 날짜는 입력 순서대로 뒤에) */
-function leaveOrder(){
-  return LEAVE.rows.map((r,i)=>i).sort((a,b)=>{
-    const da=LEAVE.rows[a].date||'9999-99-99', db=LEAVE.rows[b].date||'9999-99-99';
-    if(da!==db)return da<db?-1:1;
-    return a-b;
-  });
+function leaveYearOf(r){
+  const m=/^(\d{4})-\d{2}-\d{2}$/.exec(String(r&&r.date||''));
+  return m?m[1]:'';
+}
+function leaveDays(y){
+  const v=LEAVE.annual[String(y)];
+  return v==null?LEAVE_DEFAULT_DAYS:+v;
+}
+/* 기록이 있는 연도 + 올해를 합쳐 최신순으로 */
+function leaveYears(){
+  const set=new Set(LEAVE.rows.map(leaveYearOf).filter(Boolean));
+  Object.keys(LEAVE.annual).forEach(y=>set.add(String(y)));
+  set.add(String(new Date().getFullYear()));
+  return [...set].sort().reverse();
+}
+/* 해당 연도의 행 인덱스를 날짜 순으로 (날짜가 비어 있으면 맨 뒤) */
+function leaveOrder(year){
+  const y=String(year);
+  return LEAVE.rows
+    .map((r,i)=>i)
+    .filter(i=>{const ry=leaveYearOf(LEAVE.rows[i]);return ry?ry===y:true})
+    .sort((a,b)=>{
+      const da=LEAVE.rows[a].date||'9999-99-99', db=LEAVE.rows[b].date||'9999-99-99';
+      if(da!==db)return da<db?-1:1;
+      return a-b;
+    });
 }
 
-/* 날짜 순으로 사용 시간을 누적해 각 행의 잔여를 구한다 → {행인덱스: {leftH,leftD}} */
-function leaveBalances(){
+/* 그 해 안에서 사용 시간을 누적해 각 행의 잔여를 구한다 → {행인덱스: {leftH,leftD}} */
+function leaveBalances(year){
   const perDay=+LEAVE.hoursPerDay||8;
-  let left=(+LEAVE.annualDays||0)*perDay;
+  let left=leaveDays(year)*perDay;
   const out={};
-  leaveOrder().forEach(i=>{
+  leaveOrder(year).forEach(i=>{
     left-=(parseFloat(LEAVE.rows[i].useH)||0);
     out[i]={leftH:left,leftD:perDay?left/perDay:0};
   });
   return out;
 }
-function leaveTotals(){
+function leaveTotals(year){
   const perDay=+LEAVE.hoursPerDay||8;
-  const total=(+LEAVE.annualDays||0)*perDay;
+  const total=leaveDays(year)*perDay;
   let used=0;
-  LEAVE.rows.forEach(r=>{used+=(parseFloat(r.useH)||0)});
+  leaveOrder(year).forEach(i=>{used+=(parseFloat(LEAVE.rows[i].useH)||0)});
   return {total:total,used:used,leftH:total-used,leftD:perDay?(total-used)/perDay:0,perDay:perDay};
 }
 /* 소수점 끝의 0을 떼어 14.75 / 13 처럼 보여준다 */
@@ -1514,7 +1554,7 @@ function leaveCalItems(){
     .map(x=>({
       ri:x.i,
       name:'🌴 '+(x.r.reason||'휴가')+(x.r.useH?(' ('+leaveNum(parseFloat(x.r.useH))+'h)'):''),
-      start:x.r.date,end:x.r.date,status:'휴가',depth:0,leave:true
+      start:x.r.date,end:x.r.date,status:'휴가',depth:0,leave:true,year:leaveYearOf(x.r)
     }));
 }
 
@@ -1623,26 +1663,58 @@ function buildSheet(s){
 /* ===== 내 휴가 관리 대화상자 (공휴일 표시 옆 버튼) ===== */
 function leaveDialog(){
   const body=document.createElement('div');
+  const thisYear=String(new Date().getFullYear());
+  if(!LEAVE_YEAR)LEAVE_YEAR=thisYear;
+
+  /* 연도 전환 줄 */
+  const ybar=document.createElement('div');
+  ybar.className='leaveyear';
+  const prev=document.createElement('button');
+  prev.type='button';prev.className='ybtn';prev.textContent='◀';prev.title='이전 해';
+  prev.onclick=()=>{LEAVE_YEAR=String(+LEAVE_YEAR-1);paint()};
+  const pick=document.createElement('select');
+  pick.className='yearsel';
+  pick.onchange=()=>{LEAVE_YEAR=pick.value;paint()};
+  const next=document.createElement('button');
+  next.type='button';next.className='ybtn';next.textContent='▶';next.title='다음 해';
+  next.onclick=()=>{LEAVE_YEAR=String(+LEAVE_YEAR+1);paint()};
+  const today=document.createElement('button');
+  today.type='button';today.className='ybtn ytoday';today.textContent='올해';
+  today.onclick=()=>{LEAVE_YEAR=thisYear;paint()};
+  ybar.appendChild(prev);ybar.appendChild(pick);ybar.appendChild(next);ybar.appendChild(today);
+  body.appendChild(ybar);
 
   const bar=document.createElement('div');
   bar.className='leavebar';
-  const mk=(label,key,suffix)=>{
-    const wrap=document.createElement('label');
-    wrap.className='leavefield';
-    const t=document.createElement('span');t.textContent=label;
-    const inp=document.createElement('input');
-    inp.type='number';inp.min='0';inp.step='0.5';inp.value=String(LEAVE[key]);
-    inp.onchange=()=>{
-      const v=parseFloat(inp.value);
-      if(!(v>0)){inp.value=String(LEAVE[key]);return}
-      LEAVE[key]=v;saveLeave();paint();
-    };
-    const u=document.createElement('span');u.className='leaveunit';u.textContent=suffix;
-    wrap.appendChild(t);wrap.appendChild(inp);wrap.appendChild(u);
-    return wrap;
+  const daysWrap=document.createElement('label');
+  daysWrap.className='leavefield';
+  const daysLab=document.createElement('span');
+  const daysInp=document.createElement('input');
+  daysInp.type='number';daysInp.min='0';daysInp.step='0.5';
+  daysInp.onchange=()=>{
+    const v=parseFloat(daysInp.value);
+    if(!(v>=0)){daysInp.value=String(leaveDays(LEAVE_YEAR));return}
+    LEAVE.annual[LEAVE_YEAR]=v;saveLeave();paint();
   };
-  bar.appendChild(mk('올해 휴가','annualDays','일'));
-  bar.appendChild(mk('하루 근무','hoursPerDay','시간'));
+  const daysUnit=document.createElement('span');daysUnit.className='leaveunit';daysUnit.textContent='일';
+  daysWrap.appendChild(daysLab);daysWrap.appendChild(daysInp);daysWrap.appendChild(daysUnit);
+  bar.appendChild(daysWrap);
+
+  const hpdWrap=document.createElement('label');
+  hpdWrap.className='leavefield';
+  const hpdLab=document.createElement('span');hpdLab.textContent='하루 근무';
+  const hpdInp=document.createElement('input');
+  hpdInp.type='number';hpdInp.min='0';hpdInp.step='0.5';hpdInp.value=String(LEAVE.hoursPerDay);
+  hpdInp.title='모든 연도에 공통으로 적용됩니다.';
+  hpdInp.onchange=()=>{
+    const v=parseFloat(hpdInp.value);
+    if(!(v>0)){hpdInp.value=String(LEAVE.hoursPerDay);return}
+    LEAVE.hoursPerDay=v;saveLeave();paint();
+  };
+  const hpdUnit=document.createElement('span');hpdUnit.className='leaveunit';hpdUnit.textContent='시간';
+  hpdWrap.appendChild(hpdLab);hpdWrap.appendChild(hpdInp);hpdWrap.appendChild(hpdUnit);
+  bar.appendChild(hpdWrap);
+
   const sum=document.createElement('div');sum.className='leavesum';
   bar.appendChild(sum);
   body.appendChild(bar);
@@ -1659,7 +1731,12 @@ function leaveDialog(){
   const addBtn=document.createElement('button');
   addBtn.type='button';addBtn.className='primary leaveadd';addBtn.textContent='+ 휴가 추가';
   addBtn.onclick=()=>{
-    LEAVE.rows.push({date:'',startH:'',reason:'',useH:''});
+    // 보고 있는 해로 날짜를 미리 채워 둔다(올해면 오늘 날짜)
+    const t=new Date();
+    const def=(LEAVE_YEAR===String(t.getFullYear()))
+      ? LEAVE_YEAR+'-'+pad2(t.getMonth()+1)+'-'+pad2(t.getDate())
+      : LEAVE_YEAR+'-01-01';
+    LEAVE.rows.push({date:def,startH:'',reason:'',useH:''});
     saveLeave();paint();
     const last=table.querySelector('tbody tr:last-child input');
     if(last)last.focus();
@@ -1668,14 +1745,30 @@ function leaveDialog(){
 
   const hint=document.createElement('div');
   hint.className='mhint';
-  hint.textContent='남은 시간과 남은 날짜는 날짜 순서대로 자동 계산됩니다. 등록한 휴가는 "전체 일정 보기" 달력에 함께 표시됩니다.';
+  hint.textContent='연차는 해마다 따로 계산됩니다. 날짜를 다른 해로 바꾸면 그 해로 옮겨집니다. '
+    +'등록한 휴가는 "전체 일정 보기" 달력에 연도와 관계없이 모두 표시됩니다.';
   body.appendChild(hint);
 
   function paint(){
+    // 연도 선택 목록 (기록이 있는 해 + 올해 + 지금 보고 있는 해)
+    const years=leaveYears();
+    if(years.indexOf(LEAVE_YEAR)<0)years.push(LEAVE_YEAR);
+    years.sort().reverse();
+    pick.innerHTML='';
+    years.forEach(y=>{
+      const op=document.createElement('option');
+      const n=leaveOrder(y).filter(i=>leaveYearOf(LEAVE.rows[i])===y).length;
+      op.value=y;op.textContent=y+'년'+(n?' ('+n+'건)':'');
+      pick.appendChild(op);
+    });
+    pick.value=LEAVE_YEAR;
+    daysLab.textContent=LEAVE_YEAR+'년 휴가';
+    daysInp.value=String(leaveDays(LEAVE_YEAR));
+
     const tb=table.querySelector('tbody');
     tb.innerHTML='';
-    const bal=leaveBalances();
-    const order=leaveOrder();
+    const bal=leaveBalances(LEAVE_YEAR);
+    const order=leaveOrder(LEAVE_YEAR);
     order.forEach(i=>{
       const r=LEAVE.rows[i];
       const tr=document.createElement('tr');
@@ -1683,7 +1776,13 @@ function leaveDialog(){
 
       const dt=document.createElement('input');
       dt.type='date';dt.className='cellin';dt.value=r.date;
-      dt.onchange=()=>{r.date=dt.value;saveLeave();paint()};
+      dt.onchange=()=>{
+        r.date=dt.value;saveLeave();
+        const ny=leaveYearOf(r);
+        // 다른 해로 옮겨졌으면 그 해 화면으로 따라간다(행이 사라진 것처럼 보이지 않게)
+        if(ny&&ny!==LEAVE_YEAR)LEAVE_YEAR=ny;
+        paint();
+      };
       cell(dt);
 
       const sh=document.createElement('input');
@@ -1719,11 +1818,12 @@ function leaveDialog(){
     if(!order.length){
       const tr=document.createElement('tr');
       const td=document.createElement('td');
-      td.colSpan=7;td.className='leaveempty';td.textContent='아직 등록한 휴가가 없습니다. 아래 "+ 휴가 추가"를 눌러 주세요.';
+      td.colSpan=7;td.className='leaveempty';
+      td.textContent=LEAVE_YEAR+'년에 등록한 휴가가 없습니다. 아래 "+ 휴가 추가"를 눌러 주세요.';
       tr.appendChild(td);tb.appendChild(tr);
     }
-    const t=leaveTotals();
-    sum.innerHTML='총 <b>'+leaveNum(t.total)+'</b>시간('+leaveNum(LEAVE.annualDays)+'일)'
+    const t=leaveTotals(LEAVE_YEAR);
+    sum.innerHTML='총 <b>'+leaveNum(t.total)+'</b>시간('+leaveNum(leaveDays(LEAVE_YEAR))+'일)'
       +' · 사용 <b>'+leaveNum(t.used)+'</b>시간'
       +' · 남음 <b class="'+(t.leftH<0?'minus':'')+'">'+leaveNum(t.leftH)+'</b>시간('+leaveNum(t.leftD)+'일)';
   }
@@ -1731,7 +1831,7 @@ function leaveDialog(){
 
   openDialog({
     title:'내 휴가 관리',
-    sub:'프로젝트와 상관없이 이 PC에 공통으로 저장되는 개인 휴가 기록입니다.',
+    sub:'프로젝트와 상관없이 이 PC에 공통으로 저장되는 개인 휴가 기록입니다. 연도별로 따로 관리됩니다.',
     ok:'닫기',
     wide:true,
     body:body,
@@ -2445,7 +2545,8 @@ function focusRow(src,ri){
   if(src.kind==='cross'){
     const it=(src.items||[])[ri];
     if(!it)return;
-    if(it.leave){leaveDialog();return}   // 내 휴가는 WBS 행이 없으므로 휴가 관리 화면을 연다
+    // 내 휴가는 WBS 행이 없으므로 그 해 휴가 관리 화면을 연다
+    if(it.leave){if(it.year)LEAVE_YEAR=it.year;leaveDialog();return}
     if(it.projectKey&&it.projectKey!==KEY)switchProject(it.projectKey);
     tab('wbs',document.querySelector('nav button[data-fixed="wbs"]'));
     focusRow({kind:'fixed',key:'wbs'},it.wbsRi);
