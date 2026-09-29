@@ -308,7 +308,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.4';
+const APP_VERSION='v1.5';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -3694,8 +3694,36 @@ function wireNavDrag(){
   });
 }
 
+/* 시트 탭을 헤더 바로 아래에 붙여 둔다.
+   헤더 높이는 창 폭/버튼 줄바꿈/프로젝트 개수에 따라 달라지므로 실제 높이를 재서 맞춘다.
+   (CSS 의 고정값 top:71px 만으로는 헤더가 커질 때 탭이 헤더 뒤로 숨는다) */
+let NAV_TOP_LAST=-1;
+function syncStickyNav(){
+  const h=document.querySelector('header'),n=document.querySelector('nav');
+  if(!h||!n)return;
+  const hh=Math.round(h.getBoundingClientRect().height);
+  if(hh>0&&hh!==NAV_TOP_LAST){NAV_TOP_LAST=hh;n.style.top=hh+'px'}
+}
+function watchStickyNav(){
+  syncStickyNav();
+  window.addEventListener('resize',syncStickyNav);
+  const h=document.querySelector('header');
+  if(h&&window.ResizeObserver){
+    try{new ResizeObserver(syncStickyNav).observe(h)}catch(e){}
+  }
+  // 위 두 가지가 늦게 동작하는 환경에 대비한 안전장치.
+  // 높이가 그대로면 아무것도 고치지 않으므로 스크롤이 무거워지지 않는다.
+  let waiting=false;
+  window.addEventListener('scroll',()=>{
+    if(waiting)return;
+    waiting=true;
+    requestAnimationFrame(()=>{waiting=false;syncStickyNav()});
+  },{passive:true});
+}
+
 function layoutNav(){
   wireNavDrag();
+  syncStickyNav();
   const nav=document.querySelector('nav'),plus=document.getElementById('addSheetBtn');
   if(!nav||!plus)return;
   sheetOrder().forEach(key=>{
@@ -4153,5 +4181,6 @@ function switchProject(key){
 
 loadHolidays();
 document.querySelectorAll('[data-k]').forEach(e=>e.onchange=()=>save(true));applyProject();
+watchStickyNav();
 if(ghCfg())setTimeout(()=>{ghPull(true)},500);
 </script></body></html>
