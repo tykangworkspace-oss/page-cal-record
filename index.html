@@ -308,10 +308,27 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.3';
+const APP_VERSION='v1.4';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
+/* 특정 프로젝트가 아니라 이 PC 전체에서 쓰는 공통 기록.
+   저장/동기화 파일에 함께 담아야 다른 PC에서도 그대로 보인다.
+   GitHub 토큰 같은 접속 정보는 일부러 담지 않는다. */
+const LEAVE_KEY='pm_leave_v1';
+const HOLIDAY_KEY='pm_holidays_v1';
+const GLOBAL_KEYS=[LEAVE_KEY,HOLIDAY_KEY];
+function buildGlobals(){
+  const g={};
+  GLOBAL_KEYS.forEach(k=>{const v=storageGet(k);if(v!=null)g[k]=v});
+  return g;
+}
+function applyGlobals(g){
+  if(!g||typeof g!=='object')return;
+  GLOBAL_KEYS.forEach(k=>{
+    if(typeof g[k]==='string')storageSet(k,g[k]);
+  });
+}
 const BUILTIN=[{"key": "m1x_project_v1", "tab": "M1x 파생품 양산", "title": "M1x 파생품 양산 프로젝트", "sub": "HW / FW / Communication / Test / Production / Release", "note": "M1x는 기존 플랫폼 대비 변경점을 중심으로 관리하세요. Schematic / BOM / FW Mapping / 통신 Interface / Test / ECO / Release를 연결합니다.", "seed": {"info": {"name": "M1x 파생품 양산 프로젝트", "pm": "", "start": "", "end": "", "purpose": "기존 플랫폼 기반 M1x 파생 디바이스 개발 및 양산", "scope": "HW / FW / Communication / Motor / Test / Production / Release", "success": "양산 승인 및 Release 완료", "risk": "HW 변경 / FW Mapping / 통신 Interface / 시험 일정"}, "wbs": [["WBS-001", "기획", "프로젝트 착수", "PM", "", "", "진행중", "20", "Project Plan", "개발 범위 승인", ""], ["WBS-002", "요구사항", "M1x 제품 요구사항 확정", "PM/모터제어", "", "", "진행중", "20", "Requirement Spec", "사양 승인", ""], ["WBS-003", "HW", "Schematic 작성 및 Review", "강태영", "", "", "진행중", "40", "Schematic/BOM", "Review 및 수정 완료", ""], ["WBS-004", "HW", "PCB 제작 및 조립", "HW/생산", "", "", "예정", "0", "PCB", "보드 입고", ""], ["WBS-005", "Bring-up", "Power/MCU/ADC/PWM/Encoder", "HW/FW", "", "", "예정", "0", "Bring-up Report", "기본 HW 정상", ""], ["WBS-006", "FW", "HW Mapping 및 FW Porting", "제어/FW", "", "", "예정", "0", "FW Release", "실보드 동작", ""], ["WBS-007", "통신", "Motor Board ↔ Communication Board", "모터/통신", "", "", "예정", "0", "Interface Spec", "Data Map/Timeout 확정", ""], ["WBS-008", "시험", "기능/성능/보호시험", "각 담당", "", "", "예정", "0", "Test Report", "시험 Pass", ""], ["WBS-009", "양산", "양산 검사 기준 및 초도양산", "개발/생산/품질", "", "", "예정", "0", "Production Release", "초도품 승인", ""], ["WBS-010", "Release", "M1x 최종 Release", "PM/개발", "", "", "예정", "0", "Release Package", "Release 승인", ""]], "docs": [["DOC-001", "Project Plan", "Project", "RevA", "PM", "Draft", "", "", "", ""], ["DOC-002", "M1x Requirement Spec", "Requirement", "RevA", "PM/모터제어", "Draft", "", "", "", ""], ["DOC-003", "M1x Schematic", "HW", "RevA", "강태영", "Draft", "", "", "", ""], ["DOC-004", "M1x BOM", "HW", "RevA", "강태영", "Draft", "", "", "", ""], ["DOC-005", "HW-FW Mapping", "HW/FW", "RevA", "강태영", "Draft", "", "", "", ""], ["DOC-006", "Communication Interface Spec", "Communication", "RevA", "모터/통신", "Draft", "", "", "", ""], ["DOC-007", "M1x Test Plan", "Test", "RevA", "각 담당", "Draft", "", "", "", ""], ["DOC-008", "M1x Final Release Note", "Release", "Rev0", "PM", "미작성", "", "", "", ""]], "issue": [["ISS-001", "", "HW", "Current Sense Noise", "", "회로/Filter 검토", "강태영", "", "Open", "", ""], ["ISS-002", "", "FW/HW", "Encoder Error", "", "Signal/Mapping 확인", "선임연구원", "", "Open", "", ""], ["ISS-003", "", "통신", "Motor Board ↔ Communication Board Timeout", "", "Interface 검토", "모터/통신", "", "Open", "", ""]], "change": [], "test": [["T-001", "Function", "Power ON", "정격 입력", "정상 기동", "", "HW", "", "Not Tested", "", ""], ["T-002", "Function", "I/O", "정의된 I/O", "정상 동작", "", "FW", "", "Not Tested", "", ""], ["T-003", "Motor", "CW/CCW", "500 rpm", "정상 회전", "", "제어", "", "Not Tested", "", ""], ["T-004", "Motor", "Rated Speed", "Motor 정격 조건", "안정 운전", "", "제어", "", "Not Tested", "", ""], ["T-005", "Protection", "Over Current", "정의된 시험조건", "Fault 발생", "", "FW", "", "Not Tested", "", ""], ["T-006", "Communication", "Command/Status", "정상 및 Timeout", "정상/Fault 처리", "", "통신", "", "Not Tested", "", ""], ["T-007", "Reliability", "Long Run", "정격조건", "이상 없음", "", "품질/개발", "", "Not Tested", "", ""]], "release": [["R-001", "최종 제품 사양서", "필수", "PM", "미확인", "", "DOC-002", ""], ["R-002", "최종 Schematic / BOM", "필수", "HW", "미확인", "", "DOC-003/004", ""], ["R-003", "FW Release / Version", "필수", "FW", "미확인", "", "", ""], ["R-004", "HW-FW Mapping", "필수", "HW/FW", "미확인", "", "DOC-005", ""], ["R-005", "Communication Interface Spec", "필수", "모터/통신", "미확인", "", "DOC-006", ""], ["R-006", "Test Report", "필수", "각 담당", "미확인", "", "DOC-007", ""], ["R-007", "Issue / Change Closed", "필수", "PM", "미확인", "", "Issue/Change", ""], ["R-008", "양산 검사 기준", "필수", "품질/생산", "미확인", "", "", ""], ["R-009", "Release Note", "필수", "PM", "미확인", "", "DOC-008", ""]]}}, {"key": "es48_project_v1", "tab": "E-Series 48V", "title": "LS메카피온 E-Series 48V 모터 라인업 추가", "sub": "Motor Spec / Compatibility / Parameter / Tuning / Test / Release", "note": "E-Series는 Motor Spec → Drive Compatibility → Parameter → Tuning → Test → Reliability → Final Parameter 순으로 추적하세요.", "seed": {"info": {"name": "LS메카피온 E-Series 48V 모터 라인업 추가", "pm": "", "start": "", "end": "", "purpose": "LS메카피온 E-Series 48V PMSM을 기존 Drive에 적용하여 판매 가능한 Motor-Drive Set으로 Release", "scope": "Motor Spec / Compatibility / Parameter / Tuning / Test / Reliability / Production / Release", "success": "최종 Parameter 확정, 시험 Pass, Motor-Drive Set 등록", "risk": "Motor Spec 부족 / Parameter-Tuning / Encoder / 시험 일정"}, "wbs": [["WBS-001", "기획", "모터 추가 요청 및 범위 확정", "PM/모터제어", "", "", "진행중", "20", "Project Plan", "개발 범위 승인", ""], ["WBS-002", "사양", "E-Series Motor Spec 확보", "모터제어", "", "", "진행중", "20", "Motor Spec", "필수사양 확보", ""], ["WBS-003", "적용성", "Drive Compatibility Review", "모터제어", "", "", "예정", "0", "Compatibility Review", "적용 가능 판정", ""], ["WBS-004", "샘플", "Motor Sample 입수", "구매/기술", "", "", "예정", "0", "Sample", "샘플 입고", ""], ["WBS-005", "Parameter", "Electrical Parameter 분석", "모터제어", "", "", "예정", "0", "Parameter Sheet", "값 확보", ""], ["WBS-006", "구동", "Initial Parameter / Initial Run", "제어", "", "", "예정", "0", "Initial Test", "정상 회전", ""], ["WBS-007", "튜닝", "Tuning / 성능 최적화", "제어", "", "", "예정", "0", "Tuning Report", "성능 기준 만족", ""], ["WBS-008", "시험", "Performance / Protection Test", "제어/FW", "", "", "예정", "0", "Test Report", "시험 Pass", ""], ["WBS-009", "신뢰성", "Long Run / Reliability", "품질/개발", "", "", "예정", "0", "Reliability Report", "시험 Pass", ""], ["WBS-010", "Release", "Final Parameter / Motor-Drive Set 등록", "모터제어/PM", "", "", "예정", "0", "Release Package", "최종 등록", ""]], "docs": [["DOC-001", "Project Plan", "Project", "RevA", "PM", "Draft", "", "", "", ""], ["DOC-002", "E-Series Motor Spec", "Motor", "RevA", "모터제어", "Draft", "", "", "", ""], ["DOC-003", "Drive Compatibility Review", "Motor", "RevA", "모터제어", "Draft", "", "", "", ""], ["DOC-004", "Parameter Sheet", "Parameter", "RevA", "모터제어", "Draft", "", "", "", ""], ["DOC-005", "Tuning Report", "Parameter", "RevA", "제어", "Draft", "", "", "", ""], ["DOC-006", "Test Plan", "Test", "RevA", "각 담당", "Draft", "", "", "", ""], ["DOC-007", "Test Report", "Test", "RevA", "각 담당", "Draft", "", "", "", ""], ["DOC-008", "Final Parameter", "Release", "Rev0", "제어", "미작성", "", "", "", ""], ["DOC-009", "Motor-Drive Release Note", "Release", "Rev0", "PM", "미작성", "", "", "", ""]], "issue": [["ISS-001", "", "Motor", "Motor Spec 누락", "", "제조사 자료 추가 요청", "모터제어", "", "Open", "", ""], ["ISS-002", "", "Parameter", "Initial Run 불안정", "", "Parameter/Tuning 검토", "제어", "", "Open", "", ""], ["ISS-003", "", "Encoder", "Encoder Error", "", "Interface/Noise 확인", "HW/FW", "", "Open", "", ""]], "change": [], "test": [["T-001", "Basic Run", "CW/CCW", "저속 무부하", "정상 회전", "", "제어", "", "Not Tested", "", ""], ["T-002", "Speed", "Rated Speed", "Motor 정격조건", "안정 운전", "", "제어", "", "Not Tested", "", ""], ["T-003", "Position", "Positioning", "정의된 이동량", "기준 만족", "", "제어", "", "Not Tested", "", ""], ["T-004", "Load", "Rated Load", "정격부하", "정상 운전", "", "제어", "", "Not Tested", "", ""], ["T-005", "Protection", "Over Current", "정의조건", "Fault 발생", "", "FW", "", "Not Tested", "", ""], ["T-006", "Protection", "Encoder Fault", "센서 이상", "Fault 처리", "", "FW/HW", "", "Not Tested", "", ""], ["T-007", "Reliability", "Long Run", "정격조건", "이상 없음", "", "품질/개발", "", "Not Tested", "", ""]], "release": [["R-001", "Motor Spec 확정", "필수", "모터제어", "미확인", "", "DOC-002", ""], ["R-002", "Drive Compatibility 승인", "필수", "모터제어", "미확인", "", "DOC-003", ""], ["R-003", "Final Parameter 확정", "필수", "제어", "미확인", "", "DOC-008", ""], ["R-004", "Tuning Report 완료", "필수", "제어", "미확인", "", "DOC-005", ""], ["R-005", "Performance Test Pass", "필수", "제어", "미확인", "", "DOC-007", ""], ["R-006", "Protection / Reliability Pass", "필수", "FW/품질", "미확인", "", "DOC-007", ""], ["R-007", "Issue / Change Closed", "필수", "PM", "미확인", "", "Issue/Change", ""], ["R-008", "Motor-Drive Model 등록", "필수", "PM/영업", "미확인", "", "", ""], ["R-009", "Release Note", "필수", "PM", "미확인", "", "DOC-009", ""]]}}];
 const BLANK_SEED={info:{name:'',pm:'',start:'',end:'',purpose:'',scope:'',success:'',risk:''},wbs:[],docs:[],issue:[],change:[],test:[],release:[]};
 function loadProjects(){
@@ -355,6 +372,7 @@ function importEmbedded(){
     Object.keys(E.stores).forEach(k=>{m[k]=JSON.stringify(E.stores[k])});
     if(Array.isArray(E.projects)&&E.projects.length)m[REG_KEY]=JSON.stringify(E.projects);
     if(E.active)m[ACTIVE_KEY]=E.active;
+    if(E.globals)GLOBAL_KEYS.forEach(k=>{if(typeof E.globals[k]==='string')m[k]=E.globals[k]});
     return;
   }
   if(stamp===E.ts)return;
@@ -1459,8 +1477,8 @@ const SHEET_TEMPLATE={
    프로젝트가 아니라 공휴일처럼 이 PC 전체에서 공통으로 쓰는 개인 기록이다.
    연차는 해마다 새로 생기므로 연도별로 나눠서 관리한다.
    LEAVE = {hoursPerDay, annual:{'2026':15,...}, rows:[{date,startH,reason,useH},...]}
-   행이 어느 해에 속하는지는 날짜 앞 4자리로 판단한다(날짜가 곧 연도). */
-const LEAVE_KEY='pm_leave_v1';
+   행이 어느 해에 속하는지는 날짜 앞 4자리로 판단한다(날짜가 곧 연도).
+   저장 키(LEAVE_KEY)는 맨 위 GLOBAL_KEYS 쪽에 정의돼 있다. */
 const LEAVE_DEFAULT_DAYS=15;
 let LEAVE=loadLeave();
 let LEAVE_YEAR=null;   // 휴가 관리 창에서 보고 있는 연도
@@ -2654,13 +2672,12 @@ function pickCalColor(key,ri){
   });
 }
 
-/* ===== 공휴일(.ics) 표시 ===== */
-const HOLIDAY_KEY='pm_holidays_v1';
+/* ===== 공휴일(.ics) 표시 ===== (저장 키는 맨 위 GLOBAL_KEYS 쪽에 정의) */
 let HOLIDAYS={};
 
 function loadHolidays(){
   try{
-    const raw=localStorage.getItem(HOLIDAY_KEY);
+    const raw=storageGet(HOLIDAY_KEY);
     if(raw){const p=JSON.parse(raw);HOLIDAYS=(p&&p.items)||{}}
   }catch(e){}
 }
@@ -2691,14 +2708,14 @@ async function fetchHolidaysFromUrl(url){
 
 function saveHolidays(map,url){
   const payload={url:url||'',items:map,updatedAt:new Date().toISOString()};
-  try{localStorage.setItem(HOLIDAY_KEY,JSON.stringify(payload))}catch(e){}
+  storageSet(HOLIDAY_KEY,JSON.stringify(payload));
   HOLIDAYS=map;
   renderAllCalendars();
 }
 
 function holidayDialog(){
   let cur=null;
-  try{cur=JSON.parse(localStorage.getItem(HOLIDAY_KEY))}catch(e){}
+  try{cur=JSON.parse(storageGet(HOLIDAY_KEY))}catch(e){}
   const body=document.createElement('div');
   body.appendChild(fieldLabel('휴일 .ics 주소'));
   const urlInp=textField((cur&&cur.url)||'https://holidays.hyunbin.page/basic.ics','https://.../xxx.ics');
@@ -2759,7 +2776,7 @@ function holidayDialog(){
     clearBtn.type='button';clearBtn.textContent='휴일 표시 지우기';clearBtn.style.marginTop='8px';
     clearBtn.onclick=()=>{
       if(!confirm('저장된 휴일 정보를 지울까요?'))return;
-      try{localStorage.removeItem(HOLIDAY_KEY)}catch(e){}
+      storageRemove(HOLIDAY_KEY);
       HOLIDAYS={};
       renderAllCalendars();
       closeDialog();
@@ -3493,7 +3510,7 @@ function buildPayload(){
   const now=new Date();
   const label=now.getFullYear()+'-'+pad2(now.getMonth()+1)+'-'+pad2(now.getDate())
     +' '+pad2(now.getHours())+':'+pad2(now.getMinutes());
-  const payload={ts:now.toISOString(),label:label,active:KEY,projects:PROJECTS,stores:{}};
+  const payload={ts:now.toISOString(),label:label,active:KEY,projects:PROJECTS,stores:{},globals:buildGlobals()};
   PROJECTS.forEach(p=>{
     if(p.key===KEY){payload.stores[p.key]=d;return}
     try{
@@ -3510,6 +3527,11 @@ function writePayload(p){
     Object.keys(p.stores).forEach(k=>storageSet(k,JSON.stringify(p.stores[k])));
     if(Array.isArray(p.projects)&&p.projects.length)storageSet(REG_KEY,JSON.stringify(p.projects));
     if(p.active)storageSet(ACTIVE_KEY,p.active);
+    applyGlobals(p.globals);   // 내 휴가 / 공휴일
+    // 이미 화면이 떠 있는 상태면(GitHub 불러오기 등) 메모리 값도 새로 읽는다.
+    // 파일을 막 여는 중이면 아래 변수들이 아직 만들어지기 전이라 무시된다.
+    try{if(typeof LEAVE!=='undefined'){LEAVE=loadLeave();LEAVE_YEAR=null}}catch(e){}
+    try{if(typeof HOLIDAYS!=='undefined')loadHolidays()}catch(e){}
     return true;
   }catch(e){return false}
 }
