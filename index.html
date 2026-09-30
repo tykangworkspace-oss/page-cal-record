@@ -287,7 +287,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="gnote" id="ganttNote"></div></div>
 <div class="box"><div class="note" id="projNote">M1x는 기존 플랫폼 대비 변경점을 중심으로 관리하세요. Schematic / BOM / FW Mapping / 통신 Interface / Test / ECO / Release를 연결합니다.</div></div></section><section id="info" class="page "><div class="actions"><h2>Project Info</h2></div><div class="box"><h3>프로젝트 표시 설정</h3>
 <div class="grid2"><label>버튼 이름<input id="pmTab" placeholder="상단 버튼에 표시될 짧은 이름"></label><label>대제목<input id="pmTitle" placeholder="화면 맨 위 큰 제목"></label><label>Dashboard 안내문<input id="pmNote" placeholder="Dashboard 오른쪽 노란 안내 박스 문구"></label><label>진행 상태<select id="pmStatus"><option>진행</option><option>보류</option><option>완료</option></select></label></div>
-<div class="actions" style="margin-top:10px"><button class="primary" onclick="saveProjectMeta()">표시 정보 저장</button><button onclick="addProject()">+ 프로젝트 추가</button><button onclick="deleteProject()">현재 프로젝트 삭제</button></div>
+<div class="actions" style="margin-top:10px"><button class="primary" onclick="saveProjectMeta()">표시 정보 저장</button><button onclick="addProject()">+ 프로젝트 추가</button><button onclick="copyProject()" title="기존 프로젝트의 열 구성·시트·목록을 그대로 쓰는 새 프로젝트를 만듭니다">프로젝트 복사</button><button onclick="deleteProject()">현재 프로젝트 삭제</button></div>
 <div class="muted" style="margin-top:6px">이름만 바뀌며 입력한 데이터는 그대로 유지됩니다. 상태를 <b>완료</b>로 바꾸면 상단 버튼 줄에서 빠지고 "완료" 묶음으로 들어갑니다.</div></div><div class="box" style="margin-top:12px"><h3>표시할 시트</h3>
 <div class="muted">체크를 해제하면 상단 탭에서 사라집니다. 입력한 데이터는 그대로 남아 있어 다시 체크하면 복구됩니다. 프로젝트마다 따로 설정됩니다.</div>
 <div id="sheetToggles" style="margin-top:8px"></div></div><div class="box" style="margin-top:12px"><h3>담당자 / 팀 목록</h3>
@@ -308,7 +308,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.5';
+const APP_VERSION='v1.6';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -4082,6 +4082,115 @@ function addProject(){
   PROJECTS.push({key:key,tab:tab_,title:ti.trim()||tab_,note:'',status:'진행',builtin:false,seed:seed});
   saveProjects();
   switchProject(key);
+}
+
+/* 한 프로젝트의 데이터를 읽어온다 (아직 연 적 없으면 기본 데이터) */
+function projectData(key){
+  if(key===KEY)return JSON.parse(JSON.stringify(d));
+  let v=null;
+  try{v=JSON.parse(storageGet(key))}catch(e){}
+  if(v&&typeof v==='object')return v;
+  return JSON.parse(JSON.stringify(getSeed(key)));
+}
+
+/* 새 프로젝트용 복사본.
+   추가한 시트의 ID를 새로 매긴다 — 그대로 두면 달력의 "일정 보이기/숨기기"나
+   색상 설정이 원본 프로젝트와 섞인다. */
+function cloneForNewProject(src){
+  const c=JSON.parse(JSON.stringify(src));
+  const idMap={};
+  (c.custom||[]).forEach((s,i)=>{
+    const old=s.id;
+    s.id='sheet_'+Date.now().toString(36)+i+Math.floor(Math.random()*1000);
+    if(old)idMap[old]=s.id;
+  });
+  const remap=k=>idMap[k]||k;
+  if(Array.isArray(c.sheetOrder))c.sheetOrder=c.sheetOrder.map(remap);
+  if(Array.isArray(c.hidden))c.hidden=c.hidden.map(remap);
+  if(c.calColor&&typeof c.calColor==='object'){
+    const nc={};Object.keys(c.calColor).forEach(k=>{nc[remap(k)]=c.calColor[k]});c.calColor=nc;
+  }
+  return c;
+}
+
+/* 표의 "구성"만 남기고 입력한 내용은 비운다.
+   열 구성·추가한 속성·시트·담당자/업무 분류/범위 목록·열 순서와 너비는 그대로 둔다. */
+function stripProjectRows(c){
+  Object.keys(cfg).forEach(t=>{c[t]=[]});
+  (c.custom||[]).forEach(s=>{s.rows=[]});
+  c.calColor={};
+  if(!c.info||typeof c.info!=='object')c.info={};
+  // scope/risk 는 지금은 쓰지 않는 옛 항목이지만, 원본 글이 남지 않도록 같이 비운다
+  ['pm','start','end','purpose','success','scope','risk'].forEach(k=>{c.info[k]=''});
+  return c;
+}
+
+function copyProject(){
+  const body=document.createElement('div');
+
+  body.appendChild(fieldLabel('복사할 프로젝트'));
+  const src=document.createElement('select');
+  src.className='cellin';
+  PROJECTS.forEach(p=>{
+    const op=document.createElement('option');
+    op.value=p.key;op.textContent=p.tab+(p.key===KEY?' (지금 보는 프로젝트)':'');
+    src.appendChild(op);
+  });
+  src.value=KEY;
+  body.appendChild(src);
+
+  body.appendChild(fieldLabel('새 프로젝트 이름'));
+  const tabIn=textField(getProject(KEY).tab+' 복사','상단 버튼에 표시됩니다');
+  body.appendChild(tabIn);
+
+  body.appendChild(fieldLabel('대제목'));
+  const titleIn=textField(getProject(KEY).title+' 복사','화면 맨 위 큰 제목');
+  body.appendChild(titleIn);
+
+  src.onchange=()=>{
+    const p=PROJECTS.find(x=>x.key===src.value);
+    if(!p)return;
+    tabIn.value=p.tab+' 복사';
+    titleIn.value=(p.title||p.tab)+' 복사';
+  };
+
+  body.appendChild(fieldLabel('복사 범위'));
+  let mode='form';
+  body.appendChild(choiceGroup([
+    {v:'form',label:'양식만',desc:'열 구성·추가한 속성·시트·담당자/업무 분류/범위 목록만 그대로 가져오고, 입력한 행 내용은 비웁니다.'},
+    {v:'all',label:'내용까지',desc:'입력한 행 내용까지 통째로 복사합니다.'}
+  ],mode,v=>{mode=v},'one'));
+
+  openDialog({
+    title:'프로젝트 복사',
+    sub:'기존 프로젝트의 양식을 그대로 쓰는 새 프로젝트를 만듭니다.',
+    ok:'복사해서 만들기',
+    body:body,
+    onOk:()=>{
+      const tab_=tabIn.value.trim();
+      if(!tab_)return '새 프로젝트 이름을 입력해 주세요.';
+      const ti=titleIn.value.trim()||tab_;
+      const from=PROJECTS.find(x=>x.key===src.value);
+      if(!from)return '복사할 프로젝트를 고를 수 없습니다.';
+
+      if(src.value===KEY)save(true);   // 보고 있는 프로젝트는 최신 내용으로
+      let data=cloneForNewProject(projectData(src.value));
+      if(mode==='form')data=stripProjectRows(data);
+      data.info.name=ti;
+
+      const key='proj_'+Date.now().toString(36)+Math.floor(Math.random()*1000);
+      storageSet(key,JSON.stringify(data));
+      // seed 는 저장 내용이 없을 때만 쓰이므로 행 내용을 뺀 양식만 담는다
+      // (등록 목록과 내보내기 파일이 불필요하게 커지지 않도록)
+      const seed=stripProjectRows(JSON.parse(JSON.stringify(data)));
+      seed.info.name=ti;
+      PROJECTS.push({key:key,tab:tab_,title:ti,note:from.note||'',status:'진행',
+        builtin:false,seed:seed});
+      saveProjects();
+      switchProject(key);
+      return null;
+    }
+  });
 }
 
 function deleteProject(){
