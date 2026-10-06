@@ -120,6 +120,39 @@ select.cellin{cursor:pointer}
 .chip b{cursor:pointer;opacity:.55;font-weight:900}
 .chip b:hover{opacity:1}
 .addsel{border:1px dashed #cbd5e1;background:transparent;border-radius:999px;font-size:11px;padding:2px 4px;width:auto;color:#64748b;cursor:pointer}
+/* 텍스트탭 편집 창 — 쓰기 / 미리보기 */
+.doctabs{display:flex;align-items:center;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.doctab{flex:0 0 auto;width:auto;padding:5px 14px;font-size:13px;font-weight:600;color:#64748b;
+  border:1px solid #dde4ec;background:#fff;border-radius:999px;cursor:pointer}
+.doctab.on{color:#1d4ed8;background:#eff6ff;border-color:#bfdbfe}
+.dochint{font-size:11px;color:#94a3b8;margin-left:4px}
+.docta{min-height:420px;height:58vh;width:100%;box-sizing:border-box;font-family:inherit;
+  font-size:14px;line-height:1.7;border:1px solid #dde4ec;border-radius:8px;padding:12px;resize:vertical}
+.docpv{min-height:420px;height:58vh;overflow:auto;border:1px solid #dde4ec;border-radius:8px;
+  padding:14px 16px;background:#fff}
+.docempty{color:#94a3b8;font-size:13px;text-align:center;padding:30px 0}
+/* 변환된 Markdown 본문 */
+.mdbody{font-size:14px;line-height:1.75;color:#1f2937;word-break:break-word}
+.mdbody h1,.mdbody h2,.mdbody h3,.mdbody h4,.mdbody h5,.mdbody h6{margin:1.1em 0 .45em;line-height:1.35}
+.mdbody h1{font-size:21px}.mdbody h2{font-size:18px}.mdbody h3{font-size:16px}
+.mdbody h4,.mdbody h5,.mdbody h6{font-size:14px}
+.mdbody p{margin:.6em 0}
+.mdbody ul,.mdbody ol{padding-left:1.5em;margin:.6em 0}
+.mdbody li{margin:.2em 0}
+.mdbody blockquote{margin:.9em 0;padding:8px 14px;border-left:4px solid #94a3b8;background:#f8fafc;color:#475569}
+.mdbody blockquote p{margin:.3em 0}
+.mdbody pre{background:#111827;color:#e5e7eb;padding:12px 14px;border-radius:8px;overflow:auto;margin:.8em 0}
+.mdbody code{background:#f1f5f9;padding:2px 5px;border-radius:5px;font-size:13px}
+.mdbody pre code{background:transparent;padding:0;color:inherit}
+.mdbody hr{border:0;border-top:1px solid #e2e8f0;margin:1.2em 0}
+.mdbody a{color:#2563eb}
+.mdbody img{max-width:100%;height:auto}
+/* 전역 table{min-width:1050px} 은 시트 표용이므로 여기서는 해제 */
+.mdbody table{border-collapse:collapse;width:auto;min-width:0;max-width:100%;margin:.9em 0;font-size:13px}
+.mdbody th,.mdbody td{border:1px solid #cfd6e1;padding:7px 10px;vertical-align:top;white-space:normal}
+.mdbody th{background:#f1f5f9;font-weight:700;text-align:left}
+.mdbody tbody tr:nth-child(even) td{background:#fafafa}
+
 /* 내 휴가 — 자동 계산 칸(입력칸이 아니라 결과 표시) */
 .autocell{padding:5px 8px;font-variant-numeric:tabular-nums;color:#166534;background:#dcfce7;
   border-radius:6px;text-align:right;font-weight:600;font-size:13px}
@@ -308,7 +341,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.6';
+const APP_VERSION='v1.8';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -332,12 +365,20 @@ function applyGlobals(g){
 const BUILTIN=[{"key": "m1x_project_v1", "tab": "M1x 파생품 양산", "title": "M1x 파생품 양산 프로젝트", "sub": "HW / FW / Communication / Test / Production / Release", "note": "M1x는 기존 플랫폼 대비 변경점을 중심으로 관리하세요. Schematic / BOM / FW Mapping / 통신 Interface / Test / ECO / Release를 연결합니다.", "seed": {"info": {"name": "M1x 파생품 양산 프로젝트", "pm": "", "start": "", "end": "", "purpose": "기존 플랫폼 기반 M1x 파생 디바이스 개발 및 양산", "scope": "HW / FW / Communication / Motor / Test / Production / Release", "success": "양산 승인 및 Release 완료", "risk": "HW 변경 / FW Mapping / 통신 Interface / 시험 일정"}, "wbs": [["WBS-001", "기획", "프로젝트 착수", "PM", "", "", "진행중", "20", "Project Plan", "개발 범위 승인", ""], ["WBS-002", "요구사항", "M1x 제품 요구사항 확정", "PM/모터제어", "", "", "진행중", "20", "Requirement Spec", "사양 승인", ""], ["WBS-003", "HW", "Schematic 작성 및 Review", "강태영", "", "", "진행중", "40", "Schematic/BOM", "Review 및 수정 완료", ""], ["WBS-004", "HW", "PCB 제작 및 조립", "HW/생산", "", "", "예정", "0", "PCB", "보드 입고", ""], ["WBS-005", "Bring-up", "Power/MCU/ADC/PWM/Encoder", "HW/FW", "", "", "예정", "0", "Bring-up Report", "기본 HW 정상", ""], ["WBS-006", "FW", "HW Mapping 및 FW Porting", "제어/FW", "", "", "예정", "0", "FW Release", "실보드 동작", ""], ["WBS-007", "통신", "Motor Board ↔ Communication Board", "모터/통신", "", "", "예정", "0", "Interface Spec", "Data Map/Timeout 확정", ""], ["WBS-008", "시험", "기능/성능/보호시험", "각 담당", "", "", "예정", "0", "Test Report", "시험 Pass", ""], ["WBS-009", "양산", "양산 검사 기준 및 초도양산", "개발/생산/품질", "", "", "예정", "0", "Production Release", "초도품 승인", ""], ["WBS-010", "Release", "M1x 최종 Release", "PM/개발", "", "", "예정", "0", "Release Package", "Release 승인", ""]], "docs": [["DOC-001", "Project Plan", "Project", "RevA", "PM", "Draft", "", "", "", ""], ["DOC-002", "M1x Requirement Spec", "Requirement", "RevA", "PM/모터제어", "Draft", "", "", "", ""], ["DOC-003", "M1x Schematic", "HW", "RevA", "강태영", "Draft", "", "", "", ""], ["DOC-004", "M1x BOM", "HW", "RevA", "강태영", "Draft", "", "", "", ""], ["DOC-005", "HW-FW Mapping", "HW/FW", "RevA", "강태영", "Draft", "", "", "", ""], ["DOC-006", "Communication Interface Spec", "Communication", "RevA", "모터/통신", "Draft", "", "", "", ""], ["DOC-007", "M1x Test Plan", "Test", "RevA", "각 담당", "Draft", "", "", "", ""], ["DOC-008", "M1x Final Release Note", "Release", "Rev0", "PM", "미작성", "", "", "", ""]], "issue": [["ISS-001", "", "HW", "Current Sense Noise", "", "회로/Filter 검토", "강태영", "", "Open", "", ""], ["ISS-002", "", "FW/HW", "Encoder Error", "", "Signal/Mapping 확인", "선임연구원", "", "Open", "", ""], ["ISS-003", "", "통신", "Motor Board ↔ Communication Board Timeout", "", "Interface 검토", "모터/통신", "", "Open", "", ""]], "change": [], "test": [["T-001", "Function", "Power ON", "정격 입력", "정상 기동", "", "HW", "", "Not Tested", "", ""], ["T-002", "Function", "I/O", "정의된 I/O", "정상 동작", "", "FW", "", "Not Tested", "", ""], ["T-003", "Motor", "CW/CCW", "500 rpm", "정상 회전", "", "제어", "", "Not Tested", "", ""], ["T-004", "Motor", "Rated Speed", "Motor 정격 조건", "안정 운전", "", "제어", "", "Not Tested", "", ""], ["T-005", "Protection", "Over Current", "정의된 시험조건", "Fault 발생", "", "FW", "", "Not Tested", "", ""], ["T-006", "Communication", "Command/Status", "정상 및 Timeout", "정상/Fault 처리", "", "통신", "", "Not Tested", "", ""], ["T-007", "Reliability", "Long Run", "정격조건", "이상 없음", "", "품질/개발", "", "Not Tested", "", ""]], "release": [["R-001", "최종 제품 사양서", "필수", "PM", "미확인", "", "DOC-002", ""], ["R-002", "최종 Schematic / BOM", "필수", "HW", "미확인", "", "DOC-003/004", ""], ["R-003", "FW Release / Version", "필수", "FW", "미확인", "", "", ""], ["R-004", "HW-FW Mapping", "필수", "HW/FW", "미확인", "", "DOC-005", ""], ["R-005", "Communication Interface Spec", "필수", "모터/통신", "미확인", "", "DOC-006", ""], ["R-006", "Test Report", "필수", "각 담당", "미확인", "", "DOC-007", ""], ["R-007", "Issue / Change Closed", "필수", "PM", "미확인", "", "Issue/Change", ""], ["R-008", "양산 검사 기준", "필수", "품질/생산", "미확인", "", "", ""], ["R-009", "Release Note", "필수", "PM", "미확인", "", "DOC-008", ""]]}}, {"key": "es48_project_v1", "tab": "E-Series 48V", "title": "LS메카피온 E-Series 48V 모터 라인업 추가", "sub": "Motor Spec / Compatibility / Parameter / Tuning / Test / Release", "note": "E-Series는 Motor Spec → Drive Compatibility → Parameter → Tuning → Test → Reliability → Final Parameter 순으로 추적하세요.", "seed": {"info": {"name": "LS메카피온 E-Series 48V 모터 라인업 추가", "pm": "", "start": "", "end": "", "purpose": "LS메카피온 E-Series 48V PMSM을 기존 Drive에 적용하여 판매 가능한 Motor-Drive Set으로 Release", "scope": "Motor Spec / Compatibility / Parameter / Tuning / Test / Reliability / Production / Release", "success": "최종 Parameter 확정, 시험 Pass, Motor-Drive Set 등록", "risk": "Motor Spec 부족 / Parameter-Tuning / Encoder / 시험 일정"}, "wbs": [["WBS-001", "기획", "모터 추가 요청 및 범위 확정", "PM/모터제어", "", "", "진행중", "20", "Project Plan", "개발 범위 승인", ""], ["WBS-002", "사양", "E-Series Motor Spec 확보", "모터제어", "", "", "진행중", "20", "Motor Spec", "필수사양 확보", ""], ["WBS-003", "적용성", "Drive Compatibility Review", "모터제어", "", "", "예정", "0", "Compatibility Review", "적용 가능 판정", ""], ["WBS-004", "샘플", "Motor Sample 입수", "구매/기술", "", "", "예정", "0", "Sample", "샘플 입고", ""], ["WBS-005", "Parameter", "Electrical Parameter 분석", "모터제어", "", "", "예정", "0", "Parameter Sheet", "값 확보", ""], ["WBS-006", "구동", "Initial Parameter / Initial Run", "제어", "", "", "예정", "0", "Initial Test", "정상 회전", ""], ["WBS-007", "튜닝", "Tuning / 성능 최적화", "제어", "", "", "예정", "0", "Tuning Report", "성능 기준 만족", ""], ["WBS-008", "시험", "Performance / Protection Test", "제어/FW", "", "", "예정", "0", "Test Report", "시험 Pass", ""], ["WBS-009", "신뢰성", "Long Run / Reliability", "품질/개발", "", "", "예정", "0", "Reliability Report", "시험 Pass", ""], ["WBS-010", "Release", "Final Parameter / Motor-Drive Set 등록", "모터제어/PM", "", "", "예정", "0", "Release Package", "최종 등록", ""]], "docs": [["DOC-001", "Project Plan", "Project", "RevA", "PM", "Draft", "", "", "", ""], ["DOC-002", "E-Series Motor Spec", "Motor", "RevA", "모터제어", "Draft", "", "", "", ""], ["DOC-003", "Drive Compatibility Review", "Motor", "RevA", "모터제어", "Draft", "", "", "", ""], ["DOC-004", "Parameter Sheet", "Parameter", "RevA", "모터제어", "Draft", "", "", "", ""], ["DOC-005", "Tuning Report", "Parameter", "RevA", "제어", "Draft", "", "", "", ""], ["DOC-006", "Test Plan", "Test", "RevA", "각 담당", "Draft", "", "", "", ""], ["DOC-007", "Test Report", "Test", "RevA", "각 담당", "Draft", "", "", "", ""], ["DOC-008", "Final Parameter", "Release", "Rev0", "제어", "미작성", "", "", "", ""], ["DOC-009", "Motor-Drive Release Note", "Release", "Rev0", "PM", "미작성", "", "", "", ""]], "issue": [["ISS-001", "", "Motor", "Motor Spec 누락", "", "제조사 자료 추가 요청", "모터제어", "", "Open", "", ""], ["ISS-002", "", "Parameter", "Initial Run 불안정", "", "Parameter/Tuning 검토", "제어", "", "Open", "", ""], ["ISS-003", "", "Encoder", "Encoder Error", "", "Interface/Noise 확인", "HW/FW", "", "Open", "", ""]], "change": [], "test": [["T-001", "Basic Run", "CW/CCW", "저속 무부하", "정상 회전", "", "제어", "", "Not Tested", "", ""], ["T-002", "Speed", "Rated Speed", "Motor 정격조건", "안정 운전", "", "제어", "", "Not Tested", "", ""], ["T-003", "Position", "Positioning", "정의된 이동량", "기준 만족", "", "제어", "", "Not Tested", "", ""], ["T-004", "Load", "Rated Load", "정격부하", "정상 운전", "", "제어", "", "Not Tested", "", ""], ["T-005", "Protection", "Over Current", "정의조건", "Fault 발생", "", "FW", "", "Not Tested", "", ""], ["T-006", "Protection", "Encoder Fault", "센서 이상", "Fault 처리", "", "FW/HW", "", "Not Tested", "", ""], ["T-007", "Reliability", "Long Run", "정격조건", "이상 없음", "", "품질/개발", "", "Not Tested", "", ""]], "release": [["R-001", "Motor Spec 확정", "필수", "모터제어", "미확인", "", "DOC-002", ""], ["R-002", "Drive Compatibility 승인", "필수", "모터제어", "미확인", "", "DOC-003", ""], ["R-003", "Final Parameter 확정", "필수", "제어", "미확인", "", "DOC-008", ""], ["R-004", "Tuning Report 완료", "필수", "제어", "미확인", "", "DOC-005", ""], ["R-005", "Performance Test Pass", "필수", "제어", "미확인", "", "DOC-007", ""], ["R-006", "Protection / Reliability Pass", "필수", "FW/품질", "미확인", "", "DOC-007", ""], ["R-007", "Issue / Change Closed", "필수", "PM", "미확인", "", "Issue/Change", ""], ["R-008", "Motor-Drive Model 등록", "필수", "PM/영업", "미확인", "", "", ""], ["R-009", "Release Note", "필수", "PM", "미확인", "", "DOC-009", ""]]}}];
 const BLANK_SEED={info:{name:'',pm:'',start:'',end:'',purpose:'',scope:'',success:'',risk:''},wbs:[],docs:[],issue:[],change:[],test:[],release:[]};
 function loadProjects(){
-  let list=[];
-  try{const s=JSON.parse(storageGet(REG_KEY));if(Array.isArray(s)&&s.length)list=s}catch(e){}
-  BUILTIN.forEach(b=>{
-    if(!list.some(p=>p&&p.key===b.key))list.push({key:b.key,tab:b.tab,title:b.title,sub:b.sub,note:b.note});
-  });
+  let list=[],saved=false;
+  try{
+    const s=JSON.parse(storageGet(REG_KEY));
+    if(Array.isArray(s)&&s.length){list=s;saved=true}
+  }catch(e){}
+  // 저장된 목록이 있으면 그것이 기준이다.
+  // 여기서 기본 제공 프로젝트를 다시 채워 넣으면 사용자가 지워도 되살아난다.
+  if(!saved){
+    BUILTIN.forEach(b=>list.push({key:b.key,tab:b.tab,title:b.title,sub:b.sub,note:b.note}));
+  }
   list=list.filter(p=>p&&p.key);
+  if(!list.length){
+    BUILTIN.forEach(b=>list.push({key:b.key,tab:b.tab,title:b.title,sub:b.sub,note:b.note}));
+  }
   list.forEach(p=>{
     p.builtin=BUILTIN.some(b=>b.key===p.key);
     if(['진행','보류','완료'].indexOf(p.status)<0)p.status='진행';
@@ -870,7 +911,7 @@ function extraCellEditor(type,ri,ci){
     wrap.appendChild(btn);
     if(has){
       const prev=document.createElement('span');prev.className='docprev';
-      const flat=val.trim().replace(/\s+/g,' ');
+      const flat=mdPlain(val);
       prev.textContent=flat.slice(0,24)+(flat.length>24?'…':'');
       wrap.appendChild(prev);
     }
@@ -882,24 +923,172 @@ function extraCellEditor(type,ri,ci){
   return box;
 }
 
+/* ===== 텍스트탭: 간단 Markdown 변환 =====
+   표 · 제목 · 목록 · 굵게/기울임 · 인용 · 코드 · 구분선 · 링크만 지원한다.
+   외부 라이브러리 없이 동작하도록 직접 만든 최소 변환기다(수식은 지원하지 않음).
+   입력은 먼저 전부 이스케이프하므로 원문에 든 태그가 그대로 실행되지 않는다. */
+function mdEsc(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function mdInline(s){
+  let t=mdEsc(s);
+  const code=[];
+  // `코드` 는 먼저 빼 두고 마지막에 되돌린다(안쪽 기호를 건드리지 않도록)
+  t=t.replace(/`([^`]+)`/g,(m,c)=>{code.push(c);return '\u0000'+(code.length-1)+'\u0000'});
+  t=t.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g,(m,alt,url)=>
+    /^(https?:|data:image\/)/i.test(url)?'<img src="'+url+'" alt="'+alt+'">':mdEsc(m));
+  t=t.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,(m,txt,url)=>
+    /^(https?:|mailto:|#)/i.test(url)?'<a href="'+url+'" target="_blank" rel="noopener">'+txt+'</a>':mdEsc(m));
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/__([^_]+)__/g,'<strong>$1</strong>');
+  t=t.replace(/~~([^~]+)~~/g,'<del>$1</del>');
+  t=t.replace(/(^|[^*])\*([^*\n]+)\*/g,'$1<em>$2</em>');
+  t=t.replace(/\u0000(\d+)\u0000/g,(m,i)=>'<code>'+code[+i]+'</code>');
+  return t;
+}
+function mdCells(line){
+  let s=line.trim().replace(/^\|/,'').replace(/\|$/,'');
+  return s.split('|').map(x=>x.trim());
+}
+function mdToHtml(src){
+  const lines=String(src==null?'':src).replace(/\r\n?/g,'\n').split('\n');
+  const out=[];
+  let i=0;
+  const isTableSep=s=>/^\s*\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)*\|?\s*$/.test(s)&&s.indexOf('-')>=0;
+  while(i<lines.length){
+    const ln=lines[i];
+
+    if(/^```/.test(ln)){                                  // 코드 블록
+      const buf=[];i++;
+      while(i<lines.length&&!/^```/.test(lines[i])){buf.push(lines[i]);i++}
+      i++;
+      out.push('<pre><code>'+mdEsc(buf.join('\n'))+'</code></pre>');
+      continue;
+    }
+    if(/^\s*$/.test(ln)){i++;continue}                    // 빈 줄
+    if(/^\s*(-{3,}|\*{3,}|_{3,})\s*$/.test(ln)){out.push('<hr>');i++;continue}
+    const h=/^(#{1,6})\s+(.*)$/.exec(ln);                 // 제목
+    if(h){const n=h[1].length;out.push('<h'+n+'>'+mdInline(h[2])+'</h'+n+'>');i++;continue}
+
+    // 표 (머리글 + 구분선 + 본문)
+    if(ln.indexOf('|')>=0&&i+1<lines.length&&isTableSep(lines[i+1])){
+      const head=mdCells(ln);
+      const aligns=mdCells(lines[i+1]).map(c=>{
+        const l=c.charAt(0)===':',r=c.charAt(c.length-1)===':';
+        return (l&&r)?'center':(r?'right':(l?'left':''));
+      });
+      i+=2;
+      const body=[];
+      while(i<lines.length&&lines[i].indexOf('|')>=0&&!/^\s*$/.test(lines[i])){
+        body.push(mdCells(lines[i]));i++;
+      }
+      const sty=k=>aligns[k]?' style="text-align:'+aligns[k]+'"':'';
+      let h2='<table><thead><tr>';
+      head.forEach((c,k)=>{h2+='<th'+sty(k)+'>'+mdInline(c)+'</th>'});
+      h2+='</tr></thead><tbody>';
+      body.forEach(cells=>{
+        h2+='<tr>';
+        for(let k=0;k<head.length;k++)h2+='<td'+sty(k)+'>'+mdInline(cells[k]||'')+'</td>';
+        h2+='</tr>';
+      });
+      out.push(h2+'</tbody></table>');
+      continue;
+    }
+
+    if(/^\s*>\s?/.test(ln)){                              // 인용
+      const buf=[];
+      while(i<lines.length&&/^\s*>\s?/.test(lines[i])){buf.push(lines[i].replace(/^\s*>\s?/,''));i++}
+      out.push('<blockquote>'+mdToHtml(buf.join('\n'))+'</blockquote>');
+      continue;
+    }
+    if(/^\s*([-*+]|\d+\.)\s+/.test(ln)){                  // 목록 (한 단계)
+      const ordered=/^\s*\d+\.\s+/.test(ln);
+      const tag=ordered?'ol':'ul';
+      let h3='<'+tag+'>';
+      while(i<lines.length&&/^\s*([-*+]|\d+\.)\s+/.test(lines[i])
+            &&(/^\s*\d+\.\s+/.test(lines[i])===ordered)){
+        h3+='<li>'+mdInline(lines[i].replace(/^\s*([-*+]|\d+\.)\s+/,''))+'</li>';i++;
+      }
+      out.push(h3+'</'+tag+'>');
+      continue;
+    }
+
+    const buf=[];                                         // 문단
+    while(i<lines.length&&!/^\s*$/.test(lines[i])&&!/^(#{1,6})\s/.test(lines[i])
+          &&!/^\s*>\s?/.test(lines[i])&&!/^\s*([-*+]|\d+\.)\s+/.test(lines[i])
+          &&!/^```/.test(lines[i])
+          &&!(lines[i].indexOf('|')>=0&&i+1<lines.length&&isTableSep(lines[i+1]))){
+      buf.push(lines[i]);i++;
+    }
+    if(buf.length)out.push('<p>'+buf.map(mdInline).join('<br>')+'</p>');
+    else i++;
+  }
+  return out.join('\n');
+}
+/* 셀 미리보기용 — Markdown 기호를 걷어낸 한 줄 요약 */
+function mdPlain(src){
+  return String(src==null?'':src)
+    .replace(/```[\s\S]*?```/g,' ')
+    .replace(/^\s*\|?\s*:?-{2,}[-:\s|]*$/gm,' ')
+    .replace(/[|#>*_~`]/g,' ')
+    .replace(/!?\[([^\]]*)\]\([^)]*\)/g,'$1')
+    .replace(/\s+/g,' ').trim();
+}
+
+/* 텍스트탭 편집 창 본문 (쓰기 / 미리보기) — 두 편집기가 함께 쓴다 */
+function docEditorBody(val,onInput){
+  const body=document.createElement('div');
+  const tabs=document.createElement('div');
+  tabs.className='doctabs';
+  const bw=document.createElement('button');bw.type='button';bw.className='doctab on';bw.textContent='쓰기';
+  const bp=document.createElement('button');bp.type='button';bp.className='doctab';bp.textContent='미리보기';
+  const hint=document.createElement('span');
+  hint.className='dochint';
+  hint.textContent='표 · 제목 · 목록 · 굵게 · 인용 · 코드 지원 (GPT에서 복사한 Markdown을 그대로 붙여넣으세요)';
+  tabs.appendChild(bw);tabs.appendChild(bp);tabs.appendChild(hint);
+  body.appendChild(tabs);
+
+  const ta=document.createElement('textarea');
+  ta.className='docta';
+  ta.value=val;
+  ta.placeholder='자유롭게 메모나 문서를 작성하세요.\n\n| 항목 | 값 |\n|---|---|\n| 예시 | 10 |';
+  ta.oninput=()=>onInput(ta.value);
+  body.appendChild(ta);
+
+  const pv=document.createElement('div');
+  pv.className='docpv mdbody';
+  pv.style.display='none';
+  body.appendChild(pv);
+
+  const show=write=>{
+    bw.classList.toggle('on',write);
+    bp.classList.toggle('on',!write);
+    ta.style.display=write?'':'none';
+    pv.style.display=write?'none':'';
+    if(!write){
+      const html=mdToHtml(ta.value);
+      pv.innerHTML=html||'<div class="docempty">내용이 없습니다.</div>';
+    }
+  };
+  bw.onclick=()=>show(true);
+  bp.onclick=()=>show(false);
+  return {body:body,ta:ta,focusWrite:()=>show(true)};
+}
+
 function openFixedDocEditor(type,ri,ci){
   const def=extraCols(type)[ci-cfg[type].n];
   const raw=d[type][ri][ci];
   const val=raw==null?'':String(raw);
   const ni=(CAL_NAMECOL[type]!=null)?CAL_NAMECOL[type]:0;
   const rowLabel=String(d[type][ri][ni]||d[type][ri][0]||'').trim()||('행 '+(ri+1));
-  const body=document.createElement('div');
-  const ta=document.createElement('textarea');
-  ta.value=val;
-  ta.placeholder='자유롭게 메모나 문서를 작성하세요.';
-  ta.style.cssText='min-height:420px;height:62vh;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.7;border:1px solid #dde4ec;border-radius:8px;padding:12px;resize:vertical';
-  ta.oninput=()=>setUnloadGuard(ta.value!==val);
-  body.appendChild(ta);
+  const ed=docEditorBody(val,v=>setUnloadGuard(v!==val));
+  const ta=ed.ta;
   openDialog({
     title:(def&&def.name)||'텍스트탭',
     sub:'"'+rowLabel+'" 행의 문서',
     ok:'저장',
-    body:body,
+    body:ed.body,
     wide:true,
     noOutsideClose:true,
     confirmClose:()=>ta.value!==val?'현재 텍스트가 작성 중입니다. 나가시겠습니까?\n저장하지 않은 내용은 사라집니다.':null,
@@ -1891,7 +2080,7 @@ function cellEditor(s,ri,ci){
     if(has){
       const prev=document.createElement('span');
       prev.className='docprev';
-      const flat=val.trim().replace(/\s+/g,' ');
+      const flat=mdPlain(val);
       prev.textContent=flat.slice(0,24)+(flat.length>24?'…':'');
       wrap.appendChild(prev);
     }
@@ -2057,18 +2246,13 @@ function editCol(id,ci){
 function openDocEditor(s,ri,ci){
   const val=s.rows[ri][ci]==null?'':String(s.rows[ri][ci]);
   const rowLabel=String(s.rows[ri][0]||'').trim()||('행 '+(ri+1));
-  const body=document.createElement('div');
-  const ta=document.createElement('textarea');
-  ta.value=val;
-  ta.placeholder='자유롭게 메모나 문서를 작성하세요.';
-  ta.style.cssText='min-height:420px;height:62vh;width:100%;box-sizing:border-box;font-family:inherit;font-size:14px;line-height:1.7;border:1px solid #dde4ec;border-radius:8px;padding:12px;resize:vertical';
-  ta.oninput=()=>setUnloadGuard(ta.value!==val);
-  body.appendChild(ta);
+  const ed=docEditorBody(val,v=>setUnloadGuard(v!==val));
+  const ta=ed.ta;
   openDialog({
     title:s.cols[ci]||'텍스트탭',
     sub:'"'+rowLabel+'" 행의 문서',
     ok:'저장',
-    body:body,
+    body:ed.body,
     wide:true,
     noOutsideClose:true,
     confirmClose:()=>ta.value!==val?'현재 텍스트가 작성 중입니다. 나가시겠습니까?\n저장하지 않은 내용은 사라집니다.':null,
@@ -4195,12 +4379,9 @@ function copyProject(){
 
 function deleteProject(){
   const p=getProject(KEY);
-  if(p.builtin){
-    alert('기본 제공 프로젝트(M1x, E-Series 48V)는 삭제할 수 없습니다.\n필요 없으시면 "이름 수정"으로 다른 프로젝트로 바꿔 쓰셔도 됩니다.');
-    return;
-  }
   if(PROJECTS.length<=1){alert('마지막 남은 프로젝트는 삭제할 수 없습니다.');return}
-  if(!confirm('"'+p.tab+'" 프로젝트를 삭제할까요?\n이 프로젝트에 입력한 모든 데이터가 함께 삭제되며 되돌릴 수 없습니다.'))return;
+  const extra=p.builtin?'\n\n기본 제공 프로젝트라 한 번 지우면 "+ 프로젝트 추가"로 새로 만들 수는 있어도\n원래 샘플 내용은 돌아오지 않습니다.':'';
+  if(!confirm('"'+p.tab+'" 프로젝트를 삭제할까요?\n이 프로젝트에 입력한 모든 데이터가 함께 삭제되며 되돌릴 수 없습니다.'+extra))return;
   if(!confirm('한 번 더 확인합니다.\n정말 삭제할까요?'))return;
   storageRemove(p.key);
   PROJECTS=PROJECTS.filter(x=>x.key!==p.key);
