@@ -275,6 +275,7 @@ tr.wbs-group-start td{border-top:2px solid #dde4ec}
 .rowdrag:active{cursor:grabbing}
 tr.rowdragging td{opacity:.45}
 tr.rowdrop td{box-shadow:inset 0 2px 0 #2563eb}
+tr.rowdrop-b td{box-shadow:inset 0 -2px 0 #2563eb}
 th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;font-weight:700}
 #colList{display:flex;flex-direction:column;gap:2px;margin-top:4px}
 #colList label{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#334155;margin:0;padding:5px 2px;border-bottom:1px solid #f1f5f9}
@@ -343,7 +344,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.9';
+const APP_VERSION='v1.10';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -719,6 +720,34 @@ function moveWbsRow(from,to){
   objs.splice(b,0,moved);
   sibs.forEach((slot,k)=>{rows[slot]=objs[k]});
   return true;
+}
+
+let WBS_DRAG_ORD=null;   /* 드래그 중인 행이 화면에서 몇 번째인지 (드롭 선 방향 표시용) */
+
+/* 표에서 업무 분류가 묶여 나오는 순서는 Project Info 의 "업무 분류 목록" 순서를 따른다.
+   분류가 다른 행 위로 끌면 그 분류 묶음 전체를 그 자리로 옮긴다. */
+function moveCategoryTo(fromCat,toCat){
+  if(!fromCat||!toCat||fromCat===toCat)return false;
+  const list=Array.isArray(d.taskCategories)?d.taskCategories:(d.taskCategories=[]);
+  // 목록에 없는 분류(직접 입력 등)는 보이는 순서대로 먼저 채워 넣는다
+  [fromCat,toCat].forEach(c=>{if(list.indexOf(c)<0)list.push(c)});
+  const a=list.indexOf(fromCat),b=list.indexOf(toCat);
+  if(a<0||b<0||a===b)return false;
+  list.splice(a,1);
+  list.splice(list.indexOf(toCat)+(a<b?1:0),0,fromCat);
+  return true;
+}
+
+/* 드래그한 행을 어디로 옮길지 판단한다 */
+function wbsDropRow(from,to){
+  const rows=d.wbs||[];
+  const rf=rows[from],rt=rows[to];
+  if(!rf||!rt)return false;
+  const topF=!String(rf[11]||'').trim(), topT=!String(rt[11]||'').trim();
+  const catF=String(rf[1]||'').trim(), catT=String(rt[1]||'').trim();
+  // 최상위끼리 + 분류가 다르면 → 분류 묶음 통째로 이동
+  if(topF&&topT&&catF&&catT&&catF!==catT)return moveCategoryTo(catF,catT);
+  return moveWbsRow(from,to);
 }
 
 function wbsHasChildren(ri){
@@ -1252,20 +1281,31 @@ function render(type){
         firstTd.style.paddingLeft='20px';
         const g=document.createElement('span');
         g.className='rowdrag';g.textContent='⠿';g.draggable=true;
-        g.title='드래그해서 순서 이동 (같은 업무 분류의 같은 단계끼리)';
-        g.ondragstart=e=>{e.dataTransfer.setData('text/plain','row:'+ri);e.dataTransfer.effectAllowed='move';tr.classList.add('rowdragging')};
-        g.ondragend=()=>tr.classList.remove('rowdragging');
+        g.title='드래그해서 순서 이동\n· 같은 업무 분류끼리: 행 순서가 바뀝니다\n· 다른 업무 분류 위로: 그 분류 묶음 전체가 이동합니다';
+        g.ondragstart=e=>{
+          e.dataTransfer.setData('text/plain','row:'+ri);e.dataTransfer.effectAllowed='move';
+          WBS_DRAG_ORD=idx;tr.classList.add('rowdragging');
+        };
+        g.ondragend=()=>{WBS_DRAG_ORD=null;tr.classList.remove('rowdragging')};
         firstTd.appendChild(g);
       }
-      tr.ondragover=e=>{e.preventDefault();tr.classList.add('rowdrop')};
-      tr.ondragleave=()=>tr.classList.remove('rowdrop');
+      // 끌어내리면 아래쪽, 끌어올리면 위쪽에 선을 그려 실제 이동 방향과 맞춘다
+      tr.ondragover=e=>{
+        e.preventDefault();
+        const down=(WBS_DRAG_ORD!=null&&WBS_DRAG_ORD<idx);
+        tr.classList.toggle('rowdrop',!down);
+        tr.classList.toggle('rowdrop-b',down);
+      };
+      tr.ondragleave=()=>tr.classList.remove('rowdrop','rowdrop-b');
       tr.ondrop=e=>{
-        e.preventDefault();tr.classList.remove('rowdrop');
+        e.preventDefault();tr.classList.remove('rowdrop','rowdrop-b');
         const raw=e.dataTransfer.getData('text/plain')||'';
         if(raw.indexOf('row:')!==0)return;
         const from=parseInt(raw.slice(4),10);
         if(isNaN(from)||from===ri)return;
-        if(moveWbsRow(from,ri)){wbsRegenerateIds();render('wbs');save(true)}
+        if(wbsDropRow(from,ri)){
+          wbsRegenerateIds();render('wbs');renderCategoryList();save(true);
+        }
       };
     }
     const x=document.createElement('td');
