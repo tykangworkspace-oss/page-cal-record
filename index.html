@@ -302,6 +302,8 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 .memberchip{display:inline-flex;align-items:center;gap:6px;padding:5px 6px 5px 12px;border-radius:999px;background:#eef2f7;color:#334155;font-size:13px;font-weight:700}
 .memberchip b{cursor:pointer;opacity:.5;font-weight:900;width:18px;height:18px;line-height:18px;text-align:center;border-radius:999px}
 .memberchip b:hover{opacity:1;background:#fee2e2;color:#dc2626}
+.memberchip .chipname{cursor:pointer;border-bottom:1px dashed transparent}
+.memberchip .chipname:hover{color:#1d4ed8;border-bottom-color:#93c5fd}
 .memberadd{display:flex;gap:8px;margin-top:10px}
 .memberadd input{flex:1}
 .memberadd button{flex:0 0 auto;white-space:nowrap}
@@ -324,15 +326,15 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="muted" style="margin-top:6px">이름만 바뀌며 입력한 데이터는 그대로 유지됩니다. 상태를 <b>완료</b>로 바꾸면 상단 버튼 줄에서 빠지고 "완료" 묶음으로 들어갑니다.</div></div><div class="box" style="margin-top:12px"><h3>표시할 시트</h3>
 <div class="muted">체크를 해제하면 상단 탭에서 사라집니다. 입력한 데이터는 그대로 남아 있어 다시 체크하면 복구됩니다. 프로젝트마다 따로 설정됩니다.</div>
 <div id="sheetToggles" style="margin-top:8px"></div></div><div class="box" style="margin-top:12px"><h3>담당자 / 팀 목록</h3>
-<div class="muted">이 프로젝트에 참여하는 담당자·팀을 한 명씩 추가하세요. 시트에서 "담당" 속성 열을 만들면 이 목록 중에서 선택할 수 있습니다.</div>
+<div class="muted">이 프로젝트에 참여하는 담당자·팀을 한 명씩 추가하세요. 시트에서 "담당" 속성 열을 만들면 이 목록 중에서 선택할 수 있습니다. <b>이름을 누르면 수정</b>되며, 이미 입력한 셀도 함께 바뀝니다.</div>
 <div class="memberlist" id="memberList"></div>
 <div class="memberadd"><input id="memberInput" type="text" placeholder="이름 입력 (예: 강태영)" onkeydown="if(event.key==='Enter'){event.preventDefault();addMember()}"><button class="primary" onclick="addMember()">+ 추가</button></div>
 </div><div class="box" style="margin-top:12px"><h3>업무 분류 목록</h3>
-<div class="muted">WBS "업무 분류" 열에서 고를 수 있는 항목입니다. 최상위 업무에서 분류를 고르면 그 아래 하위 업무들도 자동으로 같은 분류를 따라갑니다.</div>
+<div class="muted">WBS "업무 분류" 열에서 고를 수 있는 항목입니다. 최상위 업무에서 분류를 고르면 그 아래 하위 업무들도 자동으로 같은 분류를 따라갑니다. <b>이름을 누르면 수정</b>되며, 이미 입력한 셀과 WBS ID도 함께 바뀝니다.</div>
 <div class="memberlist" id="categoryList"></div>
 <div class="memberadd"><input id="categoryInput" type="text" placeholder="분류 입력 (예: Hardware)" onkeydown="if(event.key==='Enter'){event.preventDefault();addCategory()}"><button class="primary" onclick="addCategory()">+ 추가</button></div>
 </div><div class="box" style="margin-top:12px"><h3>범위 목록</h3>
-<div class="muted">이 프로젝트가 다루는 범위를 하나씩 추가하세요. 시트에서 "범위" 속성 열을 만들면 이 목록 중에서 고를 수 있습니다.</div>
+<div class="muted">이 프로젝트가 다루는 범위를 하나씩 추가하세요. 시트에서 "범위" 속성 열을 만들면 이 목록 중에서 고를 수 있습니다. <b>이름을 누르면 수정</b>되며, 이미 입력한 셀도 함께 바뀝니다.</div>
 <div class="memberlist" id="scopeList"></div>
 <div class="memberadd"><input id="scopeInput" type="text" placeholder="범위 입력 (예: HW)" onkeydown="if(event.key==='Enter'){event.preventDefault();addScope()}"><button class="primary" onclick="addScope()">+ 추가</button></div>
 </div><div class="box" style="margin-top:12px"><h3>기본정보</h3>
@@ -341,7 +343,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.8';
+const APP_VERSION='v1.9';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -4011,6 +4013,146 @@ function refreshAssigneeColumns(){
   Object.keys(cfg).forEach(t=>{if(cfg[t].asg&&cfg[t].asg.length)render(t)});
 }
 
+/* ===== 목록(담당자 / 업무 분류 / 범위) 이름 변경 =====
+   목록의 이름을 바꾸면 그 값을 쓰고 있던 셀도 함께 바뀌어야 한다. */
+
+/* 그 속성 유형의 열이 어디에 있는지 모아 온다
+   → [{rows:행배열, ci:열번호}, ...] */
+function listUseSites(kind){
+  const sites=[];
+  Object.keys(cfg).forEach(t=>{
+    const rows=d[t]||[];
+    if(kind==='assignee'&&Array.isArray(cfg[t].asg)){
+      cfg[t].asg.forEach(ci=>sites.push({rows:rows,ci:ci}));       // 기본 "담당" 열
+    }
+    if(kind==='category'&&t==='wbs')sites.push({rows:rows,ci:1});  // WBS "업무 분류" 열
+    extraCols(t).forEach((def,i)=>{                                // 사용자가 추가한 열
+      if(def&&def.type===kind)sites.push({rows:rows,ci:cfg[t].n+i});
+    });
+  });
+  (d.custom||[]).forEach(s=>{
+    (s.types||[]).forEach((ty,ci)=>{
+      if(ty===kind)sites.push({rows:s.rows||[],ci:ci});
+    });
+  });
+  return sites;
+}
+
+/* 이름을 바꾸고 쓰이던 셀도 같이 고친다. 반환: 바뀐 셀 수 */
+function renameListValue(kind,from,to){
+  const multi=(kind!=='category');   // 담당·범위는 한 셀에 여러 개가 쉼표로 들어간다
+  let n=0;
+  listUseSites(kind).forEach(({rows,ci})=>{
+    rows.forEach(r=>{
+      const cur=r[ci];
+      if(cur==null||cur==='')return;
+      if(multi){
+        const parts=String(cur).split(',').map(x=>x.trim()).filter(Boolean);
+        if(parts.indexOf(from)<0)return;
+        // 바꾼 이름이 이미 있으면 중복되지 않게 정리한다
+        const seen=[],out=[];
+        parts.forEach(p=>{
+          const v=(p===from)?to:p;
+          if(seen.indexOf(v)<0){seen.push(v);out.push(v)}
+        });
+        r[ci]=out.join(', ');n++;
+      }else{
+        if(String(cur).trim()!==from)return;
+        r[ci]=to;n++;
+      }
+    });
+  });
+  return n;
+}
+
+/* 이름 변경 대화상자 (세 목록 공용) */
+function renameListDialog(opt){
+  const list=opt.list();
+  const old=list[opt.index];
+  if(old==null)return;
+  const used=listUseSites(opt.kind).reduce((a,{rows,ci})=>a+rows.filter(r=>{
+    const v=r[ci];
+    if(v==null||v==='')return false;
+    return (opt.kind==='category')
+      ? String(v).trim()===old
+      : String(v).split(',').map(x=>x.trim()).indexOf(old)>=0;
+  }).length,0);
+
+  const body=document.createElement('div');
+  body.appendChild(fieldLabel('새 이름'));
+  const inp=textField(old,'');
+  body.appendChild(inp);
+  const hint=document.createElement('div');
+  hint.className='mhint';
+  hint.textContent=used
+    ? ('이 이름을 쓰고 있는 '+used+'개 셀도 함께 바뀝니다.'
+       +(opt.kind==='category'?' WBS ID(예: '+old+'-1)도 새 이름으로 다시 매겨집니다.':''))
+    : '아직 이 이름을 쓰는 셀은 없습니다.';
+  body.appendChild(hint);
+
+  openDialog({
+    title:opt.title,
+    sub:'"'+old+'" 의 이름을 바꿉니다.',
+    ok:'변경',
+    body:body,
+    onOk:()=>{
+      const nm=inp.value.trim();
+      if(!nm)return '이름을 입력해 주세요.';
+      if(nm===old)return null;
+      const cur=opt.list();
+      if(cur.indexOf(nm)>=0)return '"'+nm+'" 은(는) 이미 목록에 있습니다.';
+      cur[opt.index]=nm;
+      renameListValue(opt.kind,old,nm);
+      opt.after(old,nm);
+      saveAll();
+      return null;
+    }
+  });
+  setTimeout(()=>{try{inp.focus();inp.select()}catch(e){}},40);
+}
+
+/* 목록 칩 공통 만들기 — 이름을 누르면 수정, × 는 삭제 */
+function listChip(name,onEdit,onRemove){
+  const chip=document.createElement('span');
+  chip.className='memberchip';
+  const t=document.createElement('span');
+  t.className='chipname';
+  t.textContent=name;
+  t.title='"'+name+'" 이름 수정';
+  t.onclick=onEdit;
+  chip.appendChild(t);
+  const x=document.createElement('b');
+  x.textContent='×';x.title='"'+name+'" 삭제';
+  x.onclick=onRemove;
+  chip.appendChild(x);
+  return chip;
+}
+
+function renameMember(i){
+  renameListDialog({
+    kind:'assignee',index:i,title:'담당자 / 팀 이름 수정',
+    list:()=>(d.members=d.members||[]),
+    after:()=>{renderMemberList();refreshAssigneeColumns();Object.keys(cfg).forEach(render)}
+  });
+}
+function renameCategory(i){
+  renameListDialog({
+    kind:'category',index:i,title:'업무 분류 이름 수정',
+    list:()=>(d.taskCategories=d.taskCategories||[]),
+    after:()=>{
+      wbsRegenerateIds();          // ID 접두사가 분류 이름이라 다시 매긴다
+      renderCategoryList();render('wbs');refreshCategoryColumns();
+    }
+  });
+}
+function renameScope(i){
+  renameListDialog({
+    kind:'scope',index:i,title:'범위 이름 수정',
+    list:()=>(d.scopes=d.scopes||[]),
+    after:()=>{renderScopeList();refreshScopeColumns();update()}
+  });
+}
+
 function renderMemberList(){
   const box=document.getElementById('memberList');
   if(!box)return;
@@ -4018,13 +4160,7 @@ function renderMemberList(){
   if(!list.length){box.innerHTML='<span class="memberempty">아직 등록된 담당자가 없습니다.</span>';return}
   box.innerHTML='';
   list.forEach((m,i)=>{
-    const chip=document.createElement('span');
-    chip.className='memberchip';
-    const t=document.createElement('span');t.textContent=m;chip.appendChild(t);
-    const x=document.createElement('b');x.textContent='×';x.title='"'+m+'" 삭제';
-    x.onclick=()=>removeMember(i);
-    chip.appendChild(x);
-    box.appendChild(chip);
+    box.appendChild(listChip(m,()=>renameMember(i),()=>removeMember(i)));
   });
 }
 
@@ -4059,13 +4195,7 @@ function renderCategoryList(){
   if(!list.length){box.innerHTML='<span class="memberempty">아직 등록된 업무 분류가 없습니다.</span>';return}
   box.innerHTML='';
   list.forEach((m,i)=>{
-    const chip=document.createElement('span');
-    chip.className='memberchip';
-    const t=document.createElement('span');t.textContent=m;chip.appendChild(t);
-    const x=document.createElement('b');x.textContent='×';x.title='"'+m+'" 삭제';
-    x.onclick=()=>removeCategory(i);
-    chip.appendChild(x);
-    box.appendChild(chip);
+    box.appendChild(listChip(m,()=>renameCategory(i),()=>removeCategory(i)));
   });
 }
 
@@ -4116,13 +4246,7 @@ function renderScopeList(){
   if(!list.length){box.innerHTML='<span class="memberempty">아직 등록된 범위가 없습니다.</span>';return}
   box.innerHTML='';
   list.forEach((m,i)=>{
-    const chip=document.createElement('span');
-    chip.className='memberchip';
-    const t=document.createElement('span');t.textContent=m;chip.appendChild(t);
-    const x=document.createElement('b');x.textContent='×';x.title='"'+m+'" 삭제';
-    x.onclick=()=>removeScope(i);
-    chip.appendChild(x);
-    box.appendChild(chip);
+    box.appendChild(listChip(m,()=>renameScope(i),()=>removeScope(i)));
   });
 }
 
