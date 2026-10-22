@@ -254,6 +254,11 @@ body.resizing{cursor:col-resize;user-select:none}
 .calgrid.big .cbar{font-size:12px;padding:4px 9px}
 .calgrid.big .caldow{font-size:13px;padding:9px 0}
 .cwcell{position:absolute;top:0;bottom:0}
+/* 빈 곳을 누르면 뒤쪽 날짜 칸이 받도록 막대/날짜만 클릭을 받는다 */
+.cwfg{pointer-events:none}
+.cbar,.cwnum{pointer-events:auto}
+.cwcell.addable,.cwnum.addable{cursor:pointer}
+.cwcell.addable:hover{background:#eff6ff;box-shadow:inset 0 0 0 1px #bfdbfe}
 .cwcell.b{border-left:1px solid #f1f5f9}
 .cwcell.out{background:#fbfcfd}
 .cwcell.today{background:#eff6ff}
@@ -345,7 +350,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.12';
+const APP_VERSION='v1.13';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -2784,6 +2789,71 @@ function sheetCalItems(s){
   }));
 }
 
+/* 달력에서 날짜를 눌러 WBS 일정을 새로 만든다 */
+function newWbsOnDate(iso){
+  const body=document.createElement('div');
+
+  body.appendChild(fieldLabel('업무'));
+  const nameIn=textField('','예) 보드 설계');
+  body.appendChild(nameIn);
+
+  body.appendChild(fieldLabel('업무 분류'));
+  const sel=document.createElement('select');
+  sel.className='cellin';
+  sel.style.cssText='width:100%;border:1px solid #dde4ec;padding:9px 10px;font-size:14px';
+  const cats=Array.isArray(d.taskCategories)?d.taskCategories:[];
+  const blank=document.createElement('option');blank.value='';blank.textContent='— 선택 안 함 —';
+  sel.appendChild(blank);
+  cats.forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)});
+  if(cats.length)sel.value=cats[0];
+  body.appendChild(sel);
+  if(!cats.length){
+    const h=document.createElement('div');
+    h.className='mhint';
+    h.textContent='Project Info → "업무 분류 목록"에 항목을 추가하면 여기서 고를 수 있습니다.';
+    body.appendChild(h);
+  }
+
+  body.appendChild(fieldLabel('기간'));
+  const per=document.createElement('div');
+  per.style.cssText='display:flex;align-items:center;gap:8px';
+  const mkDate=v=>{
+    const i=document.createElement('input');
+    i.type='date';i.value=v;
+    i.style.cssText='flex:1;border:1px solid #dde4ec;border-radius:8px;padding:9px 10px;font-size:14px;font-family:inherit';
+    return i;
+  };
+  const sIn=mkDate(iso),eIn=mkDate(iso);
+  const tilde=document.createElement('span');tilde.textContent='~';tilde.style.color='#94a3b8';
+  per.appendChild(sIn);per.appendChild(tilde);per.appendChild(eIn);
+  body.appendChild(per);
+  // 시작일을 뒤로 옮기면 종료일도 따라오게 해서 거꾸로 된 기간을 막는다
+  sIn.onchange=()=>{if(eIn.value&&eIn.value<sIn.value)eIn.value=sIn.value};
+
+  openDialog({
+    title:'일정 추가',
+    sub:'누른 날짜로 WBS 에 새 업무를 만듭니다.',
+    ok:'추가',
+    body:body,
+    onOk:()=>{
+      const nm=nameIn.value.trim();
+      if(!nm)return '업무 이름을 입력해 주세요.';
+      if(!sIn.value)return '시작일을 입력해 주세요.';
+      if(eIn.value&&eIn.value<sIn.value)return '종료일이 시작일보다 빠릅니다.';
+      const r=new Array(cfg.wbs.n+extraCols('wbs').length).fill('');
+      Object.entries(cfg.wbs.defaults||{}).forEach(([k,v])=>{r[+k]=v});
+      r[1]=sel.value;r[2]=nm;r[4]=sIn.value;r[5]=eIn.value||sIn.value;
+      d.wbs.push(r);
+      wbsRegenerateIds();
+      render('wbs');renderAllCalendars();save(true);
+      const ri=d.wbs.indexOf(r);
+      if(ri>=0)setTimeout(()=>focusRow({kind:'fixed',key:'wbs'},ri),60);
+      return null;
+    }
+  });
+  setTimeout(()=>{try{nameIn.focus()}catch(e){}},40);
+}
+
 function calBoxFor(sectionId,key){
   let box=document.getElementById('calbox_'+key);
   if(box)return box;
@@ -3130,7 +3200,8 @@ function renderCalendar(box,items,label,src,viewOpts){
   listBtn.onclick=()=>toggleCalList(src.key);
   head.appendChild(listBtn);
   const cnt=document.createElement('span');cnt.className='calcnt';
-  cnt.textContent='이 달 일정 '+hit+'건 · 마우스를 올리면 강조되고, 누르면 표에서 해당 행을 찾아줍니다';
+  cnt.textContent='이 달 일정 '+hit+'건 · 막대에 마우스를 올리면 강조되고, 누르면 표에서 해당 행을 찾아줍니다'
+    +(src.kind==='fixed'&&src.key==='wbs'?' · 빈 날짜를 누르면 일정을 추가합니다':'');
   head.appendChild(cnt);
   box.appendChild(head);
 
@@ -3184,14 +3255,23 @@ function renderCalendar(box,items,label,src,viewOpts){
   });
   grid.appendChild(dr);
 
+  // WBS 달력에서는 날짜를 눌러 바로 일정을 만들 수 있다
+  const canAdd=(src.kind==='fixed'&&src.key==='wbs');
+  const isoOf=ms=>{const t=new Date(ms);
+    return t.getUTCFullYear()+'-'+pad2(t.getUTCMonth()+1)+'-'+pad2(t.getUTCDate())};
+
   for(let wk=0;wk<weeks;wk++){
     const wd=document.createElement('div');wd.className='calweek';
     for(let i=0;i<7;i++){
       const cd=gridStart+(wk*7+i)*DAY;
       const inM=(cd>=mStart&&cd<mEnd);
       const bg=document.createElement('div');
-      bg.className='cwcell'+(i>0?' b':'')+(inM?'':' out')+(cd===todayN?' today':'');
+      bg.className='cwcell'+(i>0?' b':'')+(inM?'':' out')+(cd===todayN?' today':'')+(canAdd?' addable':'');
       bg.style.left=(i*100/7)+'%';bg.style.width=(100/7)+'%';
+      if(canAdd){
+        bg.title=isoOf(cd)+' — 눌러서 일정 추가';
+        bg.onclick=()=>newWbsOnDate(isoOf(cd));
+      }
       wd.appendChild(bg);
     }
     const fg=document.createElement('div');fg.className='cwfg';
@@ -3200,8 +3280,12 @@ function renderCalendar(box,items,label,src,viewOpts){
       const inM=(cd>=mStart&&cd<mEnd);
       const hname=HOLIDAYS[ymdKeyUTC(cd)];
       const n=document.createElement('div');
-      n.className='cwnum'+(i===0?' sun':(i===6?' sat':''))+(inM?'':' out')+(cd===todayN?' today':'')+(hname?' holiday':'');
+      n.className='cwnum'+(i===0?' sun':(i===6?' sat':''))+(inM?'':' out')+(cd===todayN?' today':'')+(hname?' holiday':'')+(canAdd?' addable':'');
       n.style.gridColumn=(i+1);n.style.gridRow=1;
+      if(canAdd){
+        n.title=isoOf(cd)+' — 눌러서 일정 추가';
+        n.onclick=()=>newWbsOnDate(isoOf(cd));
+      }
       const bnum=document.createElement('b');
       bnum.style.fontWeight='800';
       bnum.textContent=new Date(cd).getUTCDate();
