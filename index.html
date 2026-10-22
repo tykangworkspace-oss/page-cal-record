@@ -267,7 +267,7 @@ body.resizing{cursor:col-resize;user-select:none}
 .cbar:hover{box-shadow:0 0 0 2px #2563eb55}
 .cbar.ol{border-top-left-radius:0;border-bottom-left-radius:0;padding-left:4px}
 .cbar.or{border-top-right-radius:0;border-bottom-right-radius:0;padding-right:4px}
-.cmore{font-size:10px;color:#94a3b8;padding:0 4px;cursor:default}
+.cbarpar{opacity:.62;font-weight:600}
 tr.rowhi td{background:#fef9c3!important;box-shadow:inset 0 0 0 1px #facc15}
 tr.wbs-group-start td{border-top:2px solid #dde4ec}
 .rowdrag{position:absolute;left:3px;top:50%;transform:translateY(-50%);cursor:grab;color:#cbd5e1;font-size:12px;line-height:1;user-select:none}
@@ -344,7 +344,7 @@ th .collock{display:inline-block;margin-left:5px;color:#cbd5e1;font-size:10px;fo
 <div class="verbadge" id="verBadge"></div>
 <script>
 /* 파일 버전 — 여기 한 곳만 고치면 화면 오른쪽 아래 표시가 따라갑니다 */
-const APP_VERSION='v1.10';
+const APP_VERSION='v1.11';
 (function(){const b=document.getElementById('verBadge');if(b)b.textContent=APP_VERSION})();
 const ACTIVE_KEY='pm_active_project_v1';
 const REG_KEY='pm_projects_v1';
@@ -2747,11 +2747,21 @@ function fixedCalItems(type){
   const sk=c.sel?Object.keys(c.sel):[];
   const si=sk.length?parseInt(sk[sk.length-1],10):-1;
   const order=(type==='wbs')?wbsOrder():(d[type]||[]).map((r,i)=>({ri:i,depth:0}));
+  // 하위 업무는 어느 상위에 딸린 것인지 함께 보여줘야 달력에서 읽기 쉽다
+  const nameOf=rj=>{const rr=(d[type]||[])[rj];return rr?(String(rr[ni]||rr[0]||'').trim()||'(제목 없음)'):''};
+  const parentName=ri=>{
+    if(type!=='wbs')return '';
+    const pid=String((d.wbs[ri]||[])[11]||'').trim();
+    if(!pid)return '';
+    const pj=(d.wbs||[]).findIndex(rr=>String(rr[0]||'').trim()===pid);
+    return pj>=0?nameOf(pj):'';
+  };
   return order.map(({ri,depth})=>{
     const r=d[type][ri];
     return {
       ri:ri,
       name:String(r[ni]||r[0]||'').trim()||'(제목 없음)',
+      parent:parentName(ri),
       start:r[dts[0]]||'',
       end:dts.length>1?(r[dts[1]]||''):'',
       status:si>=0?String(r[si]||''):'',
@@ -2812,7 +2822,7 @@ function focusRow(src,ri){
   window.__rowhiT=setTimeout(()=>{tr.classList.remove('rowhi')},3000);
 }
 
-const CAL_MAXLANE=3;
+/* 달력은 그 주에 필요한 만큼 줄을 늘려 모든 일정을 보여준다(접지 않음) */
 const CAL_HIDDEN={},CAL_LIST_OPEN={};
 const CAL_COLORS=[
   '#dbeafe|#1d4ed8','#dcfce7|#166534','#fee2e2|#991b1b','#fef3c7|#92400e','#e0e7ff|#3730a3',
@@ -3021,7 +3031,6 @@ function holidayDialog(){
 
 function renderCalendar(box,items,label,src,viewOpts){
   viewOpts=viewOpts||{};
-  const ML=viewOpts.maxLane||CAL_MAXLANE;
   calInit();
   const prevListEl=box.querySelector('.callist');
   const prevListScroll=prevListEl?prevListEl.scrollTop:null;
@@ -3148,7 +3157,9 @@ function renderCalendar(box,items,label,src,viewOpts){
       sw.title='클릭해서 이 일정의 색상 지정';
       sw.onclick=e=>{e.stopPropagation();pickCalColor(src.key,it.ri)};
       row.appendChild(sw);
-      const nm=document.createElement('span');nm.className='calname';nm.textContent=(dep>0?'↳ ':'')+it.name;
+      const nm=document.createElement('span');nm.className='calname';
+      const par=dep>0?String(it.parent||'').trim():'';
+      nm.textContent=(dep>0?(par?(par+' › '):'↳ '):'')+it.name;
       if(dep>0)nm.style.color='#64748b';
       row.appendChild(nm);
       const meta=document.createElement('span');meta.className='calid';
@@ -3198,36 +3209,34 @@ function renderCalendar(box,items,label,src,viewOpts){
       }
       fg.appendChild(n);
     }
-    const over={};
+    // 일정이 많으면 줄 수를 늘려서 전부 보여준다 (예전처럼 "+N" 으로 접지 않는다)
     segs.filter(s=>s.wk===wk).forEach(sg=>{
-      if(sg.lane>=ML){
-        for(let c=sg.c0;c<=sg.c1;c++)over[c]=(over[c]||0)+1;
-        return;
-      }
       const bar=document.createElement('div');
       const isChild=(sg.it.depth||0)>0;
+      const par=isChild?String(sg.it.parent||'').trim():'';
       bar.className='cbar'+(sg.openL?' ol':'')+(sg.openR?' or':'')+(isChild?' cbar-child':'');
       bar.dataset.ri=String(sg.it.ri);
       bar.style.gridColumn=(sg.c0+1)+' / span '+(sg.c1-sg.c0+1);
       bar.style.gridRow=sg.lane+2;
       const st=calBarStyle(src.key,sg.it.ri,sg.it.status);
       if(st)bar.style.cssText=bar.style.cssText+';'+st;
-      bar.textContent=(sg.openL?'‹ ':'')+(isChild?'↳ ':'')+sg.it.name+(sg.openR?' ›':'');
-      bar.title=sg.it.name+(sg.it.status?' · '+sg.it.status:'')
+      bar.textContent='';
+      if(sg.openL)bar.appendChild(document.createTextNode('‹ '));
+      if(isChild){
+        // 하위 업무는 어느 상위에 딸린 것인지 앞에 흐리게 붙여 준다
+        const p=document.createElement('span');
+        p.className='cbarpar';
+        p.textContent=par?(par+' › '):'↳ ';
+        bar.appendChild(p);
+      }
+      bar.appendChild(document.createTextNode(sg.it.name+(sg.openR?' ›':'')));
+      bar.title=(par?(par+' › '):'')+sg.it.name+(sg.it.status?' · '+sg.it.status:'')
         +'\n'+(sg.it.start||'-')+(sg.it.end&&sg.it.end!==sg.it.start?(' ~ '+sg.it.end+' ('+sg.days+'일)'):'')
         +'\n\n마우스를 올리면 강조되고, 클릭하면 표에서 해당 행을 표시합니다.';
       bar.onmouseenter=()=>calSetHover(box,sg.it.ri,true);
       bar.onmouseleave=()=>calSetHover(box,sg.it.ri,false);
       bar.onclick=()=>focusRow(src,sg.it.ri);
       fg.appendChild(bar);
-    });
-    Object.keys(over).forEach(c=>{
-      const mo=document.createElement('div');
-      mo.className='cmore';
-      mo.style.gridColumn=(parseInt(c,10)+1);mo.style.gridRow=ML+2;
-      mo.textContent='+'+over[c];
-      mo.title='표시하지 못한 일정 '+over[c]+'건';
-      fg.appendChild(mo);
     });
     wd.appendChild(fg);
     grid.appendChild(wd);
@@ -3266,15 +3275,22 @@ function collectAllWbsItems(){
     }
     if(!pd)pd=getSeed(p.key);
     const rows=(pd&&pd.wbs)||[];
+    const nm=rr=>String((rr&&rr[2])||(rr&&rr[0])||'').trim()||'(제목 없음)';
     wbsOrderFor(rows).forEach(({ri:wbsRi,depth})=>{
       const r=rows[wbsRi];
       const st=r[4]||'',en=r[5]||'';
       if(!st&&!en)return;
+      const pid=String(r[11]||'').trim();
+      const pj=pid?rows.findIndex(rr=>String(rr[0]||'').trim()===pid):-1;
+      // 프로젝트 이름표는 맨 앞에 한 번만 — 하위 업무는 상위 쪽에 붙여
+      // "[프로젝트] 상위 › 하위" 로 읽히게 한다
+      const tag='['+p.tab+'] ';
       out.push({
         wbsRi:wbsRi,
         projectKey:p.key,
         project:p.tab,
-        name:'['+p.tab+'] '+(String(r[2]||r[0]||'').trim()||'(제목 없음)'),
+        name:(pj>=0?'':tag)+nm(r),
+        parent:pj>=0?(tag+nm(rows[pj])):'',
         start:st,end:en,
         status:r[6]||'',
         depth:depth
@@ -4628,8 +4644,14 @@ function switchProject(key){
   KEY=key;
   storageSet(ACTIVE_KEY,KEY);
   applyProject();
-  const first=document.querySelector('nav button');
-  tab('dashboard',first);
+  // 프로젝트를 옮기면 바로 WBS 부터 보이게 한다 (WBS 를 감춰 둔 프로젝트면 Dashboard)
+  const wbsBtn=document.querySelector('nav button[data-fixed="wbs"]');
+  if(wbsBtn&&!isHidden('wbs')){
+    tab('wbs',wbsBtn);
+  }else{
+    const first=document.querySelector('nav button');
+    if(first)tab('dashboard',first);
+  }
   window.scrollTo(0,0);
 }
 
